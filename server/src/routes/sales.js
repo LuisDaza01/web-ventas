@@ -119,7 +119,7 @@ router.get(
     const where = {};
     if (from || to) {
       where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(String(from));
+      if (from) where.createdAt.gte = startOfDay(String(from));
       if (to) where.createdAt.lte = endOfDay(String(to));
     }
     const sales = await prisma.sale.findMany({
@@ -167,8 +167,18 @@ function serializeSale(s) {
   };
 }
 
+// Interpreta "YYYY-MM-DD" como fecha LOCAL (no UTC) y devuelve inicio/fin del día.
+function localDate(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr));
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(dateStr);
+}
+function startOfDay(dateStr) {
+  const d = localDate(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 function endOfDay(dateStr) {
-  const d = new Date(dateStr);
+  const d = localDate(dateStr);
   d.setHours(23, 59, 59, 999);
   return d;
 }
