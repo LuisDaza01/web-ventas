@@ -10,12 +10,22 @@ export function AuthProvider({ children }) {
     return raw ? JSON.parse(raw) : null;
   });
 
-  async function login(username, password) {
-    const { data } = await api.post('/auth/login', { username, password });
+  function persist(data) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
     return data.user;
+  }
+
+  async function login(email, password) {
+    const { data } = await api.post('/auth/login', { email, password });
+    return persist(data);
+  }
+
+  // Alta de una tienda nueva + su primer usuario administrador.
+  async function registrar({ tienda, name, email, password }) {
+    const { data } = await api.post('/auth/registro', { tienda, name, email, password });
+    return persist(data);
   }
 
   function logout() {
@@ -32,7 +42,9 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, can }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, login, registrar, logout, can }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

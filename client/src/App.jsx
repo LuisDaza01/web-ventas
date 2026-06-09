@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
+import Registro from './pages/Registro.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Products from './pages/Products.jsx';
 import POS from './pages/POS.jsx';
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/registro" element={user ? <Navigate to="/" replace /> : <Registro />} />
 
       <Route path="/" element={<Protected><Dashboard /></Protected>} />
       <Route path="/pos" element={<Protected allow={['ADMIN', 'CAJERO']}><POS /></Protected>} />

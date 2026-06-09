@@ -1,24 +1,30 @@
-// Pantalla de inicio de sesión.
+// Pantalla de registro: crea una tienda nueva + su usuario administrador.
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ScanBarcode, LogIn } from 'lucide-react';
+import { ScanBarcode, Store } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { errorMsg } from '../api/client.js';
 
-export default function Login() {
-  const { login } = useAuth();
+export default function Registro() {
+  const { registrar } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [form, setForm] = useState({ tienda: '', name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      await registrar({
+        tienda: form.tienda.trim(),
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        password: form.password,
+      });
       navigate('/');
     } catch (err) {
       setError(errorMsg(err));
@@ -34,19 +40,32 @@ export default function Login() {
           <div className="bg-brand-600 text-white rounded-2xl p-3 mb-3">
             <ScanBarcode size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">Web Ventas</h1>
-          <p className="text-sm text-slate-500">Inventario y Punto de Venta</p>
+          <h1 className="text-2xl font-bold text-slate-800">Crea tu tienda</h1>
+          <p className="text-sm text-slate-500">Empieza a vender en minutos</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="label">Nombre de la tienda</label>
+            <input
+              className="input"
+              value={form.tienda}
+              onChange={set('tienda')}
+              autoFocus
+              placeholder="Mi Tiendita"
+            />
+          </div>
+          <div>
+            <label className="label">Tu nombre</label>
+            <input className="input" value={form.name} onChange={set('name')} placeholder="Juan Pérez" />
+          </div>
           <div>
             <label className="label">Email</label>
             <input
               type="email"
               className="input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus
+              value={form.email}
+              onChange={set('email')}
               placeholder="tu@correo.com"
             />
           </div>
@@ -55,30 +74,25 @@ export default function Login() {
             <input
               type="password"
               className="input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              value={form.password}
+              onChange={set('password')}
+              placeholder="mínimo 6 caracteres"
             />
           </div>
 
           {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
           <button type="submit" className="btn-primary w-full" disabled={loading}>
-            <LogIn size={18} /> {loading ? 'Entrando...' : 'Iniciar sesión'}
+            <Store size={18} /> {loading ? 'Creando...' : 'Crear mi tienda'}
           </button>
         </form>
 
         <p className="mt-5 text-sm text-center text-slate-500">
-          ¿No tienes cuenta?{' '}
-          <Link to="/registro" className="text-brand-600 font-medium hover:underline">
-            Registra tu tienda
+          ¿Ya tienes cuenta?{' '}
+          <Link to="/login" className="text-brand-600 font-medium hover:underline">
+            Inicia sesión
           </Link>
         </p>
-
-        <div className="mt-6 text-xs text-slate-400 border-t border-slate-100 pt-4">
-          <p className="font-medium text-slate-500 mb-1">Cuenta de prueba:</p>
-          <p>admin@demo.com / admin123</p>
-        </div>
       </div>
     </div>
   );

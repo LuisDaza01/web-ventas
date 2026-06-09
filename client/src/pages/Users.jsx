@@ -10,7 +10,7 @@ const ROLE_BADGE = { ADMIN: 'bg-purple-100 text-purple-700', CAJERO: 'bg-brand-1
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', username: '', password: '', role: 'CAJERO' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'CAJERO' });
   const [error, setError] = useState('');
 
   const load = useCallback(() => api.get('/users').then((r) => setUsers(r.data)), []);
@@ -51,7 +51,7 @@ export default function Users() {
           <thead className="bg-slate-50 text-slate-500 text-left">
             <tr>
               <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Usuario</th>
+              <th className="px-4 py-3 font-medium">Email</th>
               <th className="px-4 py-3 font-medium">Rol</th>
               <th className="px-4 py-3 font-medium text-center">Estado</th>
               <th className="px-4 py-3 font-medium text-right">Acciones</th>
@@ -61,7 +61,7 @@ export default function Users() {
             {users.map((u) => (
               <tr key={u.id} className={u.active ? '' : 'opacity-50'}>
                 <td className="px-4 py-3 font-medium text-slate-700">{u.name}</td>
-                <td className="px-4 py-3 text-slate-500">{u.username}</td>
+                <td className="px-4 py-3 text-slate-500">{u.email}</td>
                 <td className="px-4 py-3"><span className={`badge ${ROLE_BADGE[u.role]}`}>{ROLE_LABEL[u.role]}</span></td>
                 <td className="px-4 py-3 text-center">
                   <span className={`badge ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{u.active ? 'Activo' : 'Inactivo'}</span>
@@ -78,7 +78,7 @@ export default function Users() {
       <Modal title="Nuevo usuario" open={open} onClose={() => setOpen(false)}>
         <form onSubmit={create} className="space-y-4">
           <div><label className="label">Nombre completo</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
-          <div><label className="label">Usuario</label><input className="input" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required /></div>
+          <div><label className="label">Email</label><input type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
           <div><label className="label">Contraseña</label><input type="password" className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></div>
           <div>
             <label className="label">Rol</label>
