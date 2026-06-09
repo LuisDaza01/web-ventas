@@ -81,7 +81,9 @@ router.get(
 router.get(
   '/barcode/:code',
   asyncHandler(async (req, res) => {
-    const product = await prisma.product.findUnique({
+    // barcode es único POR TIENDA (no global), así que se busca con findFirst;
+    // la extensión inyecta el tiendaId del contexto.
+    const product = await prisma.product.findFirst({
       where: { barcode: req.params.code.trim() },
       include: { category: true, supplier: true },
     });
@@ -121,11 +123,15 @@ router.put(
   '/:id',
   authorize('ADMIN', 'ALMACEN'),
   asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    // Verificar pertenencia a la tienda antes de actualizar (findUnique aislado).
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) throw new HttpError(404, 'Producto no encontrado.');
+
     const data = productSchema.partial().parse(req.body);
-    const product = await prisma.product.update({
-      where: { id: Number(req.params.id) },
-      data,
-    });
+    await prisma.product.update({ where: { id }, data });
+    // update -> updateMany devuelve { count }; recargamos el registro.
+    const product = await prisma.product.findUnique({ where: { id } });
     res.json(serialize(product));
   })
 );
@@ -135,10 +141,11 @@ router.delete(
   '/:id',
   authorize('ADMIN'),
   asyncHandler(async (req, res) => {
-    await prisma.product.update({
-      where: { id: Number(req.params.id) },
-      data: { active: false },
-    });
+    const id = Number(req.params.id);
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) throw new HttpError(404, 'Producto no encontrado.');
+
+    await prisma.product.update({ where: { id }, data: { active: false } });
     res.json({ ok: true });
   })
 );

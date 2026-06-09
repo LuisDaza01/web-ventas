@@ -9,11 +9,20 @@ import { authenticate, authorize } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate, authorize('ADMIN'));
 
-const select = { id: true, name: true, username: true, role: true, active: true, createdAt: true };
+const select = {
+  id: true,
+  name: true,
+  email: true,
+  username: true,
+  role: true,
+  active: true,
+  createdAt: true,
+};
 
 const createSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
-  username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres'),
+  email: z.string().email('Email inválido'),
+  username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres').optional(),
   password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres'),
   role: z.enum(['ADMIN', 'CAJERO', 'ALMACEN']),
 });
@@ -50,13 +59,15 @@ router.put(
       active: z.boolean().optional(),
       password: z.string().min(4).optional(),
     });
+    const id = Number(req.params.id);
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) throw new HttpError(404, 'Usuario no encontrado.');
+
     const data = schema.parse(req.body);
     if (data.password) data.password = await bcrypt.hash(data.password, 10);
-    const user = await prisma.user.update({
-      where: { id: Number(req.params.id) },
-      data,
-      select,
-    });
+    await prisma.user.update({ where: { id }, data });
+    // update -> updateMany devuelve { count }; recargamos el registro.
+    const user = await prisma.user.findUnique({ where: { id }, select });
     res.json(user);
   })
 );
@@ -65,13 +76,14 @@ router.put(
 router.delete(
   '/:id',
   asyncHandler(async (req, res) => {
-    if (Number(req.params.id) === req.user.id) {
+    const id = Number(req.params.id);
+    if (id === req.user.id) {
       throw new HttpError(400, 'No puedes desactivar tu propio usuario.');
     }
-    await prisma.user.update({
-      where: { id: Number(req.params.id) },
-      data: { active: false },
-    });
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing) throw new HttpError(404, 'Usuario no encontrado.');
+
+    await prisma.user.update({ where: { id }, data: { active: false } });
     res.json({ ok: true });
   })
 );

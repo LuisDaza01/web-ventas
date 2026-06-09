@@ -1,38 +1,74 @@
-// Datos de prueba: usuarios de cada rol, categorías, proveedores y productos.
-// Ejecuta:  npm run seed
+// Datos de prueba multi-tenant:
+//  - 1 SUPERADMIN de plataforma (sin tienda)
+//  - 1 "Tienda Demo" con sus usuarios (admin/cajero/almacén), categorías,
+//    proveedor y productos.
+//
+// El seed corre SIN contexto de tienda, así que el tiendaId se pone explícito.
 import bcrypt from 'bcryptjs';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
+const hash = (p) => bcrypt.hashSync(p, 10);
 
 async function main() {
-  console.log('🌱 Sembrando datos de prueba...');
+  console.log('🌱 Sembrando datos de prueba (multi-tenant)...');
 
-  // ---- Usuarios (uno por rol) ----
-  const hash = (p) => bcrypt.hashSync(p, 10);
+  // ---- Superadmin de la plataforma ----
+  await prisma.user.upsert({
+    where: { email: 'superadmin@webventas.app' },
+    update: {},
+    create: {
+      name: 'Super Admin',
+      email: 'superadmin@webventas.app',
+      password: hash('super123'),
+      role: 'SUPERADMIN',
+      tiendaId: null,
+    },
+  });
+
+  // ---- Tienda Demo ----
+  const tienda = await prisma.tienda.upsert({
+    where: { slug: 'demo' },
+    update: {},
+    create: { nombre: 'Tienda Demo', slug: 'demo', plan: 'FREE' },
+  });
+  const tiendaId = tienda.id;
+
+  // ---- Usuarios de la tienda ----
   const users = [
-    { name: 'Administrador', username: 'admin', password: hash('admin123'), role: 'ADMIN' },
-    { name: 'Cajero Demo', username: 'cajero', password: hash('cajero123'), role: 'CAJERO' },
-    { name: 'Almacén Demo', username: 'almacen', password: hash('almacen123'), role: 'ALMACEN' },
+    { name: 'Administrador', email: 'admin@demo.com', password: hash('admin123'), role: 'ADMIN' },
+    { name: 'Cajero Demo', email: 'cajero@demo.com', password: hash('cajero123'), role: 'CAJERO' },
+    { name: 'Almacén Demo', email: 'almacen@demo.com', password: hash('almacen123'), role: 'ALMACEN' },
   ];
   for (const u of users) {
-    await prisma.user.upsert({ where: { username: u.username }, update: {}, create: u });
+    await prisma.user.upsert({
+      where: { email: u.email },
+      update: {},
+      create: { ...u, username: u.email.split('@')[0], tiendaId },
+    });
   }
 
   // ---- Categorías ----
   const catNames = ['Bebidas', 'Snacks', 'Limpieza', 'Lácteos', 'Abarrotes'];
   const categories = {};
   for (const name of catNames) {
-    const c = await prisma.category.upsert({ where: { name }, update: {}, create: { name } });
+    const c = await prisma.category.upsert({
+      where: { tiendaId_name: { tiendaId, name } },
+      update: {},
+      create: { name, tiendaId },
+    });
     categories[name] = c.id;
   }
 
   // ---- Proveedor ----
-  const supplier = await prisma.supplier.create({
-    data: { name: 'Distribuidora Central', phone: '555-1234', email: 'ventas@central.com' },
-  });
+  let supplier = await prisma.supplier.findFirst({ where: { tiendaId, name: 'Distribuidora Central' } });
+  if (!supplier) {
+    supplier = await prisma.supplier.create({
+      data: { name: 'Distribuidora Central', phone: '555-1234', email: 'ventas@central.com', tiendaId },
+    });
+  }
 
-  // ---- Productos de ejemplo (con códigos de barras reales de prueba) ----
+  // ---- Productos ----
   const productos = [
     { barcode: '7501055300013', name: 'Coca-Cola 600ml', categoria: 'Bebidas', compra: 8, venta: 15, stock: 40 },
     { barcode: '7501055363513', name: 'Agua Mineral 1L', categoria: 'Bebidas', compra: 5, venta: 10, stock: 60 },
@@ -43,10 +79,9 @@ async function main() {
     { barcode: '7501008042016', name: 'Arroz 1kg', categoria: 'Abarrotes', compra: 14, venta: 22, stock: 50 },
     { barcode: '7501008013015', name: 'Azúcar 1kg', categoria: 'Abarrotes', compra: 16, venta: 24, stock: 20 },
   ];
-
   for (const p of productos) {
     await prisma.product.upsert({
-      where: { barcode: p.barcode },
+      where: { tiendaId_barcode: { tiendaId, barcode: p.barcode } },
       update: {},
       create: {
         barcode: p.barcode,
@@ -57,14 +92,17 @@ async function main() {
         stock: p.stock,
         minStock: 5,
         supplierId: supplier.id,
+        tiendaId,
       },
     });
   }
 
-  console.log('✅ Listo. Usuarios de prueba:');
-  console.log('   admin / admin123      (administrador)');
-  console.log('   cajero / cajero123    (cajero)');
-  console.log('   almacen / almacen123  (almacén)');
+  console.log('✅ Listo.');
+  console.log('   Plataforma: superadmin@webventas.app / super123');
+  console.log(`   Tienda Demo (id ${tiendaId}):`);
+  console.log('     admin@demo.com / admin123      (ADMIN)');
+  console.log('     cajero@demo.com / cajero123    (CAJERO)');
+  console.log('     almacen@demo.com / almacen123  (ALMACEN)');
 }
 
 main()

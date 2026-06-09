@@ -1,5 +1,9 @@
 // Esquema de base de datos - Sistema de Inventario y Punto de Venta
 // Prisma + PostgreSQL
+//
+// MULTI-TENANT (SaaS): cada negocio es una `Tienda`. Todas las tablas de
+// negocio llevan `tiendaId` y los datos se aíslan por tienda (ver
+// server/src/config/db.js — extensión de Prisma que inyecta el filtro).
 
 generator client {
   provider = "prisma-client-js"
@@ -10,9 +14,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ---------- Plataforma / Tiendas (tenants) ----------
+enum Plan {
+  FREE
+  BASIC
+  PRO
+}
+
+model Tienda {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  slug      String   @unique // identificador legible para URL / soporte
+  plan      Plan     @default(FREE)
+  activa    Boolean  @default(true) // si está suspendida, se bloquea el acceso
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  categories Category[]
+  suppliers  Supplier[]
+  products   Product[]
+  sales      Sale[]
+  purchases  Purchase[]
+  movements  StockMovement[]
+}
+
 // ---------- Usuarios y roles ----------
 enum Role {
-  ADMIN // Administrador: ve y hace todo
+  SUPERADMIN // Dueño de la plataforma: administra tiendas (sin tiendaId)
+  ADMIN // Administrador de una tienda: ve y hace todo dentro de su tienda
   CAJERO // Cajero: solo vende
   ALMACEN // Encargado de almacén: registra productos y stock
 }
@@ -20,24 +50,34 @@ enum Role {
 model User {
   id        Int      @id @default(autoincrement())
   name      String
-  username  String   @unique
+  email     String   @unique // login global en toda la plataforma
+  username  String? // opcional, nombre corto legible
   password  String // hash bcrypt
   role      Role     @default(CAJERO)
   active    Boolean  @default(true)
+  tiendaId  Int? // null SOLO para SUPERADMIN
+  tienda    Tienda?  @relation(fields: [tiendaId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sales         Sale[]
-  purchases     Purchase[]
-  movements     StockMovement[]
+  sales     Sale[]
+  purchases Purchase[]
+  movements StockMovement[]
+
+  @@index([tiendaId])
 }
 
 // ---------- Catálogo ----------
 model Category {
   id        Int       @id @default(autoincrement())
-  name      String    @unique
+  name      String
+  tiendaId  Int
+  tienda    Tienda    @relation(fields: [tiendaId], references: [id])
   createdAt DateTime  @default(now())
   products  Product[]
+
+  @@unique([tiendaId, name]) // único por tienda, no global
+  @@index([tiendaId])
 }
 
 model Supplier {
@@ -46,14 +86,18 @@ model Supplier {
   phone     String?
   email     String?
   address   String?
+  tiendaId  Int
+  tienda    Tienda     @relation(fields: [tiendaId], references: [id])
   createdAt DateTime   @default(now())
   products  Product[]
   purchases Purchase[]
+
+  @@index([tiendaId])
 }
 
 model Product {
   id            Int       @id @default(autoincrement())
-  barcode       String    @unique // código de barras
+  barcode       String // código de barras (único POR TIENDA)
   name          String
   categoryId    Int?
   category      Category? @relation(fields: [categoryId], references: [id])
@@ -66,6 +110,8 @@ model Product {
   supplier      Supplier? @relation(fields: [supplierId], references: [id])
   imageUrl      String? // imagen (opcional)
   active        Boolean   @default(true)
+  tiendaId      Int
+  tienda        Tienda    @relation(fields: [tiendaId], references: [id])
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -73,8 +119,10 @@ model Product {
   purchaseItems PurchaseItem[]
   movements     StockMovement[]
 
+  @@unique([tiendaId, barcode]) // un mismo código puede existir en otra tienda
   @@index([name])
   @@index([categoryId])
+  @@index([tiendaId])
 }
 
 // ---------- Ventas ----------
@@ -82,12 +130,15 @@ model Sale {
   id        Int        @id @default(autoincrement())
   userId    Int
   user      User       @relation(fields: [userId], references: [id])
+  tiendaId  Int
+  tienda    Tienda     @relation(fields: [tiendaId], references: [id])
   total     Decimal    @db.Decimal(12, 2)
   paid      Decimal    @db.Decimal(12, 2) // monto recibido
   change    Decimal    @db.Decimal(12, 2) // cambio / vuelto
   createdAt DateTime   @default(now())
   items     SaleItem[]
 
+  @@index([tiendaId])
   @@index([createdAt])
 }
 
@@ -110,11 +161,14 @@ model Purchase {
   user       User           @relation(fields: [userId], references: [id])
   supplierId Int?
   supplier   Supplier?      @relation(fields: [supplierId], references: [id])
+  tiendaId   Int
+  tienda     Tienda         @relation(fields: [tiendaId], references: [id])
   note       String?
   total      Decimal        @default(0) @db.Decimal(12, 2)
   createdAt  DateTime       @default(now())
   items      PurchaseItem[]
 
+  @@index([tiendaId])
   @@index([createdAt])
 }
 
@@ -140,6 +194,8 @@ model StockMovement {
   id          Int          @id @default(autoincrement())
   productId   Int
   product     Product      @relation(fields: [productId], references: [id])
+  tiendaId    Int
+  tienda      Tienda       @relation(fields: [tiendaId], references: [id])
   type        MovementType
   quantity    Int // positivo = entrada, negativo = salida
   stockAfter  Int // stock resultante tras el movimiento
@@ -149,6 +205,7 @@ model StockMovement {
   user        User?        @relation(fields: [userId], references: [id])
   createdAt   DateTime     @default(now())
 
+  @@index([tiendaId])
   @@index([productId])
   @@index([createdAt])
 }
