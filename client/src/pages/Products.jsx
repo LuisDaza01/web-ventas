@@ -57,6 +57,32 @@ export default function Products() {
     setModalOpen(true);
   }
 
+  // Crea una categoría al vuelo y la deja seleccionada.
+  async function crearCategoria() {
+    const name = window.prompt('Nombre de la nueva categoría:');
+    if (!name || !name.trim()) return;
+    try {
+      const { data } = await api.post('/catalog/categories', { name: name.trim() });
+      setCategories((cs) => [...cs, data].sort((a, b) => a.name.localeCompare(b.name)));
+      setForm((f) => ({ ...f, categoryId: data.id }));
+    } catch (err) {
+      setError(errorMsg(err));
+    }
+  }
+
+  // Crea un proveedor (solo nombre) al vuelo y lo deja seleccionado.
+  async function crearProveedor() {
+    const name = window.prompt('Nombre del nuevo proveedor:');
+    if (!name || !name.trim()) return;
+    try {
+      const { data } = await api.post('/catalog/suppliers', { name: name.trim() });
+      setSuppliers((ss) => [...ss, data].sort((a, b) => a.name.localeCompare(b.name)));
+      setForm((f) => ({ ...f, supplierId: data.id }));
+    } catch (err) {
+      setError(errorMsg(err));
+    }
+  }
+
   async function handleImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -196,16 +222,26 @@ export default function Products() {
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
           </Field>
           <Field label="Categoría">
-            <select className="input" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-              <option value="">— Sin categoría —</option>
-              {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <div className="flex gap-2">
+              <select className="input" value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
+                <option value="">— Sin categoría —</option>
+                {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <button type="button" onClick={crearCategoria} className="btn-secondary shrink-0" title="Nueva categoría">
+                <Plus size={16} />
+              </button>
+            </div>
           </Field>
           <Field label="Proveedor (opcional)">
-            <select className="input" value={form.supplierId} onChange={(e) => setForm({ ...form, supplierId: e.target.value })}>
-              <option value="">— Ninguno —</option>
-              {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+            <div className="flex gap-2">
+              <select className="input" value={form.supplierId} onChange={(e) => setForm({ ...form, supplierId: e.target.value })}>
+                <option value="">— Ninguno —</option>
+                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <button type="button" onClick={crearProveedor} className="btn-secondary shrink-0" title="Nuevo proveedor">
+                <Plus size={16} />
+              </button>
+            </div>
           </Field>
           <Field label="Precio de compra">
             <input type="number" step="0.01" min="0" className="input" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })} />
