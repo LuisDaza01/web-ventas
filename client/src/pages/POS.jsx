@@ -1,9 +1,12 @@
 // Punto de venta: escanear código de barras, carrito, totales, cambio y recibo.
-import { useState, useRef, useEffect } from 'react';
-import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer } from 'lucide-react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import Modal from '../components/Modal.jsx';
+
+// El escáner (con ZXing) se carga solo al abrir la cámara, para no inflar el bundle.
+const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
 
 export default function POS() {
   const [code, setCode] = useState('');
@@ -12,6 +15,7 @@ export default function POS() {
   const [paid, setPaid] = useState('');
   const [receipt, setReceipt] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const inputRef = useRef(null);
 
   // Mantener el foco en el campo del escáner (el lector USB/Bluetooth "teclea" el código).
@@ -26,18 +30,27 @@ export default function POS() {
     setTimeout(() => setMessage(null), 3000);
   }
 
-  // Al escanear (Enter) o buscar el código.
+  // Busca un producto por código de barras y lo agrega al carrito.
+  // La usan tanto el lector/teclado como el escáner por cámara.
+  async function lookupAndAdd(barcode) {
+    const bc = String(barcode).trim();
+    if (!bc) return;
+    try {
+      const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(bc)}`);
+      addToCart(p);
+      flash('ok', `Agregado: ${p.name}`);
+    } catch (err) {
+      flash('error', err?.response?.status === 404 ? `Producto no registrado (${bc}).` : errorMsg(err));
+    }
+  }
+
+  // Al escanear (Enter) o buscar el código con el lector/teclado.
   async function handleScan(e) {
     e.preventDefault();
     const barcode = code.trim();
     if (!barcode) return;
     setCode('');
-    try {
-      const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(barcode)}`);
-      addToCart(p);
-    } catch (err) {
-      flash('error', err?.response?.status === 404 ? `Producto no registrado (${barcode}).` : errorMsg(err));
-    }
+    await lookupAndAdd(barcode);
     focusInput();
   }
 
@@ -110,6 +123,14 @@ export default function POS() {
             onChange={(e) => setCode(e.target.value)}
           />
           <button type="submit" className="btn-primary shrink-0">Agregar</button>
+          <button
+            type="button"
+            onClick={() => setScannerOpen(true)}
+            className="btn-secondary shrink-0"
+            title="Escanear con la cámara del dispositivo"
+          >
+            <Camera size={18} /> Cámara
+          </button>
         </form>
 
         {message && (
@@ -184,6 +205,20 @@ export default function POS() {
           <CheckCircle2 size={20} /> {saving ? 'Procesando...' : 'Confirmar venta'}
         </button>
       </div>
+
+      {/* Escáner por cámara (se carga bajo demanda) */}
+      {scannerOpen && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            open
+            onDetected={lookupAndAdd}
+            onClose={() => {
+              setScannerOpen(false);
+              focusInput();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Recibo */}
       <Receipt receipt={receipt} onClose={() => setReceipt(null)} />
