@@ -71,8 +71,9 @@ ALTER TABLE "User" ALTER COLUMN "username" DROP NOT NULL;
 -- Backfill: email a partir del username (ajústalo luego a emails reales).
 UPDATE "User" SET "email" = lower("username") || '@tienda1.local'
 WHERE "email" IS NULL;
--- Todos los usuarios actuales pertenecen a la Tienda #1.
-UPDATE "User" SET "tiendaId" = 1 WHERE "tiendaId" IS NULL;
+-- Los usuarios actuales pertenecen a la Tienda #1 (excepto el SUPERADMIN, que
+-- no pertenece a ninguna tienda — importante al re-ejecutar la migración).
+UPDATE "User" SET "tiendaId" = 1 WHERE "tiendaId" IS NULL AND "role" <> 'SUPERADMIN';
 
 -- 4) tiendaId en las demás tablas de negocio (nullable -> backfill -> NOT NULL)
 ALTER TABLE "Category"      ADD COLUMN IF NOT EXISTS "tiendaId" INTEGER;
