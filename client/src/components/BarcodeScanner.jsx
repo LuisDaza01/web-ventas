@@ -17,19 +17,42 @@ export default function BarcodeScanner({ open, onDetected, onClose }) {
     let controls;
     let cancelled = false;
 
+    const onResult = (result) => {
+      if (!result) return;
+      const code = result.getText();
+      const now = Date.now();
+      if (code === lastRef.current.code && now - lastRef.current.t < 1500) return;
+      lastRef.current = { code, t: now };
+      onDetected(code);
+    };
+
     (async () => {
       try {
-        controls = await reader.decodeFromVideoDevice(undefined, videoRef.current, (result) => {
-          if (!result) return;
-          const code = result.getText();
-          const now = Date.now();
-          if (code === lastRef.current.code && now - lastRef.current.t < 1500) return;
-          lastRef.current = { code, t: now };
-          onDetected(code);
-        });
+        // Pide la cámara trasera (mejor para escanear). Si no hay, usa la que haya.
+        controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: 'environment' } } },
+          videoRef.current,
+          onResult
+        );
+        // iOS/Safari: reproducir en línea y en silencio o el video sale negro.
+        const v = videoRef.current;
+        if (v) {
+          v.setAttribute('playsinline', 'true');
+          v.muted = true;
+          try {
+            await v.play();
+          } catch {
+            /* el autoplay puede requerir interacción; el botón ya cuenta como gesto */
+          }
+        }
         if (cancelled && controls) controls.stop();
-      } catch {
-        setError('No se pudo acceder a la cámara. Revisa los permisos y que uses HTTPS (o localhost).');
+      } catch (e) {
+        const name = e?.name || '';
+        setError(
+          name === 'NotAllowedError'
+            ? 'Permiso de cámara denegado. Habilítalo en los ajustes del navegador y recarga.'
+            : 'No se pudo abrir la cámara. Asegúrate de usar HTTPS y de dar permiso.'
+        );
       }
     })();
 
@@ -59,7 +82,7 @@ export default function BarcodeScanner({ open, onDetected, onClose }) {
 
         <div className="relative bg-black aspect-[4/3]">
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-          <video ref={videoRef} className="w-full h-full object-cover" />
+          <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
           {/* Guía visual */}
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="w-3/4 h-1/3 border-2 border-brand-400/80 rounded-lg" />
