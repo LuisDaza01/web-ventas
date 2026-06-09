@@ -1,0 +1,44 @@
+// Enrutado principal con control de acceso por rol.
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext.jsx';
+import Layout from './components/Layout.jsx';
+import Login from './pages/Login.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Products from './pages/Products.jsx';
+import POS from './pages/POS.jsx';
+import Purchases from './pages/Purchases.jsx';
+import Reports from './pages/Reports.jsx';
+import Users from './pages/Users.jsx';
+
+// Envuelve rutas privadas; redirige al login o muestra "sin acceso" según el rol.
+function Protected({ children, allow }) {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (allow && !allow.includes(user.role)) return <Navigate to="/" replace />;
+  return <Layout>{children}</Layout>;
+}
+
+export default function App() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+
+      <Route path="/" element={<Protected><Dashboard /></Protected>} />
+      <Route path="/pos" element={<Protected allow={['ADMIN', 'CAJERO']}><POS /></Protected>} />
+      <Route
+        path="/productos"
+        element={<Protected allow={['ADMIN', 'ALMACEN']}><Products /></Protected>}
+      />
+      <Route
+        path="/compras"
+        element={<Protected allow={['ADMIN', 'ALMACEN']}><Purchases /></Protected>}
+      />
+      <Route path="/reportes" element={<Protected allow={['ADMIN']}><Reports /></Protected>} />
+      <Route path="/usuarios" element={<Protected allow={['ADMIN']}><Users /></Protected>} />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

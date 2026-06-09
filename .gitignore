@@ -1,0 +1,43 @@
+# ---------- Dependencias ----------
+node_modules/
+**/node_modules/
+
+# ---------- Builds / salidas ----------
+dist/
+build/
+client/dist/
+
+# ---------- Variables de entorno y secretos ----------
+.env
+.env.*
+!.env.example
+server/.env
+
+# ---------- Prisma ----------
+# (el cliente generado se reconstruye con `prisma generate`)
+**/node_modules/.prisma/
+
+# ---------- Archivos subidos por la app ----------
+server/uploads/*
+!server/uploads/.gitkeep
+
+# ---------- Logs ----------
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs/
+
+# ---------- Sistema operativo ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---------- Editores / IDE ----------
+.vscode/
+.idea/
+*.swp
+
+# ---------- Caché ----------
+.cache/
+.vite/
