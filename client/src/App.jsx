@@ -10,6 +10,7 @@ import POS from './pages/POS.jsx';
 import Purchases from './pages/Purchases.jsx';
 import Reports from './pages/Reports.jsx';
 import Users from './pages/Users.jsx';
+import PanelPlataforma from './pages/PanelPlataforma.jsx';
 
 // Envuelve rutas privadas; redirige al login o muestra "sin acceso" según el rol.
 function Protected({ children, allow }) {
@@ -27,7 +28,22 @@ export default function App() {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/registro" element={user ? <Navigate to="/" replace /> : <Registro />} />
 
-      <Route path="/" element={<Protected><Dashboard /></Protected>} />
+      <Route
+        path="/"
+        element={
+          user?.role === 'SUPERADMIN' ? (
+            <Navigate to="/plataforma" replace />
+          ) : (
+            <Protected>
+              <Dashboard />
+            </Protected>
+          )
+        }
+      />
+      <Route
+        path="/plataforma"
+        element={<Protected allow={['SUPERADMIN']}><PanelPlataforma /></Protected>}
+      />
       <Route path="/pos" element={<Protected allow={['ADMIN', 'CAJERO']}><POS /></Protected>} />
       <Route
         path="/productos"

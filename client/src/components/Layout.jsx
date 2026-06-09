@@ -8,6 +8,7 @@ import {
   TruckIcon,
   BarChart3,
   Users as UsersIcon,
+  Store,
   LogOut,
   Menu,
   X,
@@ -15,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext.jsx';
 
 const NAV = [
+  { to: '/plataforma', label: 'Tiendas', icon: Store, roles: ['SUPERADMIN'] },
   { to: '/', label: 'Inicio', icon: LayoutDashboard, roles: ['ADMIN', 'CAJERO', 'ALMACEN'] },
   { to: '/pos', label: 'Punto de venta', icon: ScanBarcode, roles: ['ADMIN', 'CAJERO'] },
   { to: '/productos', label: 'Productos', icon: Package, roles: ['ADMIN', 'ALMACEN'] },
@@ -23,7 +25,12 @@ const NAV = [
   { to: '/usuarios', label: 'Usuarios', icon: UsersIcon, roles: ['ADMIN'] },
 ];
 
-const ROLE_LABEL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACEN: 'Almacén' };
+const ROLE_LABEL = {
+  SUPERADMIN: 'Plataforma',
+  ADMIN: 'Administrador',
+  CAJERO: 'Cajero',
+  ALMACEN: 'Almacén',
+};
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
