@@ -31,15 +31,30 @@ BEGIN;
 
 -- 1) Tabla Tienda ---------------------------------------------------------
 CREATE TABLE IF NOT EXISTS "Tienda" (
-  "id"        SERIAL        PRIMARY KEY,
-  "nombre"    TEXT          NOT NULL,
-  "slug"      TEXT          NOT NULL,
-  "plan"      "Plan"        NOT NULL DEFAULT 'FREE',
-  "activa"    BOOLEAN       NOT NULL DEFAULT true,
-  "createdAt" TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP
+  "id"            SERIAL        PRIMARY KEY,
+  "nombre"        TEXT          NOT NULL,
+  "slug"          TEXT          NOT NULL,
+  "plan"          "Plan"        NOT NULL DEFAULT 'FREE',
+  "activa"        BOOLEAN       NOT NULL DEFAULT true,
+  "moneda"        TEXT          NOT NULL DEFAULT 'BOB',
+  "simbolo"       TEXT          NOT NULL DEFAULT 'Bs',
+  "impuesto"      NUMERIC(5,2)  NOT NULL DEFAULT 0,
+  "direccion"     TEXT,
+  "telefono"      TEXT,
+  "mensajeRecibo" TEXT,
+  "logoUrl"       TEXT,
+  "createdAt"     TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt"     TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "Tienda_slug_key" ON "Tienda"("slug");
+-- Personalización (por si la tabla Tienda ya existía de una versión previa).
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "moneda"        TEXT NOT NULL DEFAULT 'BOB';
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "simbolo"       TEXT NOT NULL DEFAULT 'Bs';
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "impuesto"      NUMERIC(5,2) NOT NULL DEFAULT 0;
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "direccion"     TEXT;
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "telefono"      TEXT;
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "mensajeRecibo" TEXT;
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "logoUrl"       TEXT;
 
 -- 2) Crear la Tienda #1 (recibe todos los datos actuales) -----------------
 INSERT INTO "Tienda" ("id", "nombre", "slug")

@@ -27,6 +27,16 @@ model Tienda {
   slug      String   @unique // identificador legible para URL / soporte
   plan      Plan     @default(FREE)
   activa    Boolean  @default(true) // si está suspendida, se bloquea el acceso
+
+  // Personalización por tienda
+  moneda        String  @default("BOB") // código ISO de la moneda
+  simbolo       String  @default("Bs") // símbolo que se muestra en precios
+  impuesto      Decimal @default(0) @db.Decimal(5, 2) // % de impuesto (ej. IVA)
+  direccion     String? // dirección para el recibo
+  telefono      String? // teléfono para el recibo
+  mensajeRecibo String? // mensaje al pie del recibo
+  logoUrl       String? // logo de la tienda
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -4,10 +4,27 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import { prisma } from '../config/db.js';
-import { asyncHandler, HttpError } from '../utils/http.js';
+import { asyncHandler, HttpError, toNumber } from '../utils/http.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
+
+// Datos de la tienda que se envían al cliente (incluye personalización).
+function tiendaPublic(t) {
+  if (!t) return null;
+  return {
+    id: t.id,
+    nombre: t.nombre,
+    slug: t.slug,
+    moneda: t.moneda,
+    simbolo: t.simbolo,
+    impuesto: toNumber(t.impuesto),
+    logoUrl: t.logoUrl,
+    direccion: t.direccion,
+    telefono: t.telefono,
+    mensajeRecibo: t.mensajeRecibo,
+  };
+}
 
 function signToken(user) {
   return jwt.sign(
@@ -76,7 +93,7 @@ router.post(
         role: result.user.role,
         tiendaId: result.user.tiendaId,
       },
-      tienda: { id: result.tienda.id, nombre: result.tienda.nombre, slug: result.tienda.slug },
+      tienda: tiendaPublic(result.tienda),
     });
   })
 );
@@ -117,9 +134,7 @@ router.post(
         role: user.role,
         tiendaId: user.tiendaId,
       },
-      tienda: user.tienda
-        ? { id: user.tienda.id, nombre: user.tienda.nombre, slug: user.tienda.slug }
-        : null,
+      tienda: tiendaPublic(user.tienda),
     });
   })
 );
@@ -138,7 +153,17 @@ router.get(
         role: true,
         active: true,
         tiendaId: true,
-        tienda: { select: { id: true, nombre: true, slug: true, activa: true } },
+        tienda: {
+          select: {
+            id: true,
+            nombre: true,
+            slug: true,
+            activa: true,
+            moneda: true,
+            simbolo: true,
+            logoUrl: true,
+          },
+        },
       },
     });
     if (!user) throw new HttpError(404, 'Usuario no encontrado.');

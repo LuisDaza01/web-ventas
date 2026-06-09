@@ -30,6 +30,19 @@ export const errorMsg = (err) =>
   err?.message ||
   'Ocurrió un error inesperado.';
 
-// Formato de moneda.
-export const money = (n) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(n) || 0);
+// Formato de moneda usando el símbolo de la tienda actual (guardado en login).
+// Ej.: "Bs 15.00". Por defecto Bs si no hay tienda cargada.
+export const money = (n) => {
+  let simbolo = 'Bs';
+  try {
+    const t = JSON.parse(localStorage.getItem('tienda') || '{}');
+    if (t.simbolo) simbolo = t.simbolo;
+  } catch {
+    /* ignora JSON inválido */
+  }
+  const monto = new Intl.NumberFormat('es-BO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(n) || 0);
+  return `${simbolo} ${monto}`;
+};

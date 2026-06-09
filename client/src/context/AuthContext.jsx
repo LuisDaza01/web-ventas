@@ -9,11 +9,23 @@ export function AuthProvider({ children }) {
     const raw = localStorage.getItem('user');
     return raw ? JSON.parse(raw) : null;
   });
+  const [tienda, setTiendaState] = useState(() => {
+    const raw = localStorage.getItem('tienda');
+    return raw ? JSON.parse(raw) : null;
+  });
+
+  // Guarda (y publica) la configuración de la tienda; afecta moneda y recibo.
+  function setTienda(t) {
+    if (t) localStorage.setItem('tienda', JSON.stringify(t));
+    else localStorage.removeItem('tienda');
+    setTiendaState(t);
+  }
 
   function persist(data) {
     localStorage.setItem('token', data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     setUser(data.user);
+    if (data.tienda !== undefined) setTienda(data.tienda);
     return data.user;
   }
 
@@ -31,7 +43,9 @@ export function AuthProvider({ children }) {
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('tienda');
     setUser(null);
+    setTiendaState(null);
   }
 
   // Atajos para comprobar permisos en la interfaz.
@@ -42,7 +56,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, registrar, logout, can }}>
+    <AuthContext.Provider value={{ user, tienda, setTienda, login, registrar, logout, can }}>
       {children}
     </AuthContext.Provider>
   );

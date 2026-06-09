@@ -14,6 +14,7 @@ import userRoutes from './routes/users.js';
 import catalogRoutes from './routes/catalog.js';
 import platformRoutes from './routes/platform.js';
 import subscriptionRoutes from './routes/subscription.js';
+import tiendaRoutes from './routes/tienda.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/catalog', catalogRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/tienda', tiendaRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

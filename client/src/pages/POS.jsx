@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
+import { useAuth } from '../context/AuthContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 export default function POS() {
@@ -200,14 +201,20 @@ function Row({ label, value }) {
 }
 
 function Receipt({ receipt, onClose }) {
+  const { tienda } = useAuth();
   if (!receipt) return null;
   return (
     <Modal title="Venta realizada ✅" open={!!receipt} onClose={onClose}>
       <div id="recibo" className="font-mono text-sm text-slate-700">
         <div className="text-center mb-3">
-          <p className="font-bold text-base">WEB VENTAS</p>
+          {tienda?.logoUrl && (
+            <img src={tienda.logoUrl} alt="logo" className="h-12 mx-auto mb-2 object-contain" />
+          )}
+          <p className="font-bold text-base">{(tienda?.nombre || 'WEB VENTAS').toUpperCase()}</p>
+          {tienda?.direccion && <p className="text-xs text-slate-500">{tienda.direccion}</p>}
+          {tienda?.telefono && <p className="text-xs text-slate-500">Tel: {tienda.telefono}</p>}
           <p className="text-xs text-slate-500">Recibo de venta #{receipt.id}</p>
-          <p className="text-xs text-slate-500">{new Date(receipt.createdAt).toLocaleString('es-MX')}</p>
+          <p className="text-xs text-slate-500">{new Date(receipt.createdAt).toLocaleString('es-BO')}</p>
           <p className="text-xs text-slate-500">Atendió: {receipt.user?.name}</p>
         </div>
         <div className="border-y border-dashed border-slate-300 py-2 space-y-1">
@@ -223,7 +230,9 @@ function Receipt({ receipt, onClose }) {
           <div className="flex justify-between"><span>Recibido</span><span>{money(receipt.paid)}</span></div>
           <div className="flex justify-between"><span>Cambio</span><span>{money(receipt.change)}</span></div>
         </div>
-        <p className="text-center text-xs text-slate-400 mt-3">¡Gracias por su compra!</p>
+        <p className="text-center text-xs text-slate-400 mt-3">
+          {tienda?.mensajeRecibo || '¡Gracias por su compra!'}
+        </p>
       </div>
       <div className="flex justify-end gap-2 mt-4 print:hidden">
         <button onClick={onClose} className="btn-secondary">Cerrar</button>
