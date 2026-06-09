@@ -3,6 +3,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import authRoutes from './routes/auth.js';
@@ -42,6 +43,18 @@ app.use('/api/catalog', catalogRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/tienda', tiendaRoutes);
+
+// En producción servimos el frontend ya compilado (carpeta ./public, copiada en
+// el Docker build). Misma URL para app y API -> sin CORS y con el HTTPS de Railway.
+const publicDir = path.join(__dirname, '..', 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+  // SPA fallback: cualquier ruta que no sea API/uploads devuelve index.html.
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) return next();
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+}
 
 app.use(notFound);
 app.use(errorHandler);
