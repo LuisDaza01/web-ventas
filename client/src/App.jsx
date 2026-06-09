@@ -10,6 +10,7 @@ import POS from './pages/POS.jsx';
 import Purchases from './pages/Purchases.jsx';
 import Reports from './pages/Reports.jsx';
 import Users from './pages/Users.jsx';
+import MiPlan from './pages/MiPlan.jsx';
 import PanelPlataforma from './pages/PanelPlataforma.jsx';
 
 // Envuelve rutas privadas; redirige al login o muestra "sin acceso" según el rol.
@@ -55,6 +56,7 @@ export default function App() {
       />
       <Route path="/reportes" element={<Protected allow={['ADMIN']}><Reports /></Protected>} />
       <Route path="/usuarios" element={<Protected allow={['ADMIN']}><Users /></Protected>} />
+      <Route path="/plan" element={<Protected allow={['ADMIN']}><MiPlan /></Protected>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

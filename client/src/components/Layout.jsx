@@ -9,6 +9,7 @@ import {
   BarChart3,
   Users as UsersIcon,
   Store,
+  Crown,
   LogOut,
   Menu,
   X,
@@ -23,6 +24,7 @@ const NAV = [
   { to: '/compras', label: 'Entrada de stock', icon: TruckIcon, roles: ['ADMIN', 'ALMACEN'] },
   { to: '/reportes', label: 'Reportes', icon: BarChart3, roles: ['ADMIN'] },
   { to: '/usuarios', label: 'Usuarios', icon: UsersIcon, roles: ['ADMIN'] },
+  { to: '/plan', label: 'Mi plan', icon: Crown, roles: ['ADMIN'] },
 ];
 
 const ROLE_LABEL = {

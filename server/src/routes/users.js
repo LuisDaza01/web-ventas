@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { prisma } from '../config/db.js';
 import { asyncHandler, HttpError } from '../utils/http.js';
 import { authenticate, authorize } from '../middleware/auth.js';
+import { assertWithinLimit } from '../config/plans.js';
 
 const router = Router();
 router.use(authenticate, authorize('ADMIN'));
@@ -41,6 +42,12 @@ router.post(
   '/',
   asyncHandler(async (req, res) => {
     const data = createSchema.parse(req.body);
+
+    // Límite del plan de la tienda.
+    const tienda = await prisma.tienda.findUnique({ where: { id: req.user.tiendaId } });
+    const current = await prisma.user.count({ where: { active: true } });
+    assertWithinLimit({ plan: tienda?.plan, kind: 'usuarios', current, HttpError });
+
     const user = await prisma.user.create({
       data: { ...data, password: await bcrypt.hash(data.password, 10) },
       select,
