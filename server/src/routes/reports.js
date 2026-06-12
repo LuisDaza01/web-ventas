@@ -7,22 +7,30 @@ import { authenticate, authorize } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate, authorize('ADMIN')); // Solo el administrador ve reportes.
 
-// Interpreta "YYYY-MM-DD" como fecha LOCAL (no UTC), para que el rango coincida
-// con el día del usuario. Sin valor, usa la fecha indicada por defecto.
-function parseLocalDate(str, fallback) {
-  const m = str && /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str));
-  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return new Date(fallback);
+// Convierte un parámetro de fecha del query a un instante exacto.
+//   - Instante ISO con hora ("2026-06-12T04:00:00.000Z"): se usa tal cual. El
+//     cliente ya calculó el límite del día EN SU ZONA LOCAL, así que aquí no
+//     hay que adivinar la zona (clave porque el servidor corre en UTC).
+//   - Fecha simple "YYYY-MM-DD" o sin valor: respaldo para clientes antiguos;
+//     se interpreta como inicio/fin del día en la zona del servidor.
+function boundary(value, isEnd, fallback) {
+  if (value && String(value).includes('T')) {
+    const d = new Date(value);
+    if (!Number.isNaN(d.getTime())) return d;
+  }
+  const m = value && /^(\d{4})-(\d{2})-(\d{2})/.exec(String(value));
+  const d = m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(fallback);
+  if (isEnd) d.setHours(23, 59, 59, 999);
+  else d.setHours(0, 0, 0, 0);
+  return d;
 }
 
 function rangeFromQuery(query) {
-  // Por defecto: el día de hoy.
-  const now = new Date();
-  const start = parseLocalDate(query.from, now);
-  const end = parseLocalDate(query.to, now);
-  start.setHours(0, 0, 0, 0);
-  end.setHours(23, 59, 59, 999);
-  return { start, end };
+  const now = new Date(); // Por defecto: el día de hoy (zona del servidor).
+  return {
+    start: boundary(query.from, false, now),
+    end: boundary(query.to, true, now),
+  };
 }
 
 // GET /api/reports/summary?from=&to=  -> resumen de ventas y ganancia del rango

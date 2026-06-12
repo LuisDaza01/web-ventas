@@ -2,14 +2,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { DollarSign, ShoppingCart, Package, TrendingUp, RefreshCw } from 'lucide-react';
 import { api, money, errorMsg } from '../api/client.js';
+import { dayStartISO, dayEndISO, todayStr } from '../utils/dates.js';
 
 // Fecha en formato YYYY-MM-DD (hora local).
 function fmt(d) {
   const off = d.getTimezoneOffset();
   return new Date(d.getTime() - off * 60000).toISOString().slice(0, 10);
-}
-function todayStr() {
-  return fmt(new Date());
 }
 
 // Rango de fechas para cada periodo rápido.
@@ -79,7 +77,9 @@ export default function Reports() {
     setLoading(true);
     setError('');
     try {
-      const params = { from, to };
+      // Mandamos el inicio/fin del día en hora local como instante ISO, para
+      // que el servidor (UTC) cuente las ventas del día correcto.
+      const params = { from: dayStartISO(from), to: dayEndISO(to) };
       const [s, t] = await Promise.all([
         api.get('/reports/summary', { params }),
         api.get('/reports/top-products', { params: { ...params, limit: 10 } }),

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ScanBarcode, Package, TruckIcon, AlertTriangle, DollarSign, ShoppingCart } from 'lucide-react';
 import { api, money } from '../api/client.js';
+import { dayStartISO, dayEndISO, todayStr } from '../utils/dates.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Dashboard() {
@@ -12,7 +13,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     api.get('/products/low-stock').then((r) => setLowStock(r.data)).catch(() => {});
-    if (can.admin) api.get('/reports/summary').then((r) => setSummary(r.data)).catch(() => {});
+    if (can.admin) {
+      // Resumen del día local (el servidor corre en UTC).
+      const hoy = todayStr();
+      const params = { from: dayStartISO(hoy), to: dayEndISO(hoy) };
+      api.get('/reports/summary', { params }).then((r) => setSummary(r.data)).catch(() => {});
+    }
   }, [can.admin]);
 
   const shortcuts = [
