@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
 import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
-import Registro from './pages/Registro.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Products from './pages/Products.jsx';
 import POS from './pages/POS.jsx';
@@ -13,6 +12,7 @@ import Users from './pages/Users.jsx';
 import MiPlan from './pages/MiPlan.jsx';
 import AjustesTienda from './pages/AjustesTienda.jsx';
 import PanelPlataforma from './pages/PanelPlataforma.jsx';
+import UsuariosPlataforma from './pages/UsuariosPlataforma.jsx';
 
 // Envuelve rutas privadas; redirige al login o muestra "sin acceso" según el rol.
 function Protected({ children, allow }) {
@@ -28,7 +28,6 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-      <Route path="/registro" element={user ? <Navigate to="/" replace /> : <Registro />} />
 
       <Route
         path="/"
@@ -45,6 +44,10 @@ export default function App() {
       <Route
         path="/plataforma"
         element={<Protected allow={['SUPERADMIN']}><PanelPlataforma /></Protected>}
+      />
+      <Route
+        path="/plataforma/usuarios"
+        element={<Protected allow={['SUPERADMIN']}><UsuariosPlataforma /></Protected>}
       />
       <Route path="/pos" element={<Protected allow={['ADMIN', 'CAJERO']}><POS /></Protected>} />
       <Route

@@ -1,7 +1,10 @@
 // Panel de plataforma (SUPERADMIN): administra todas las tiendas del SaaS.
 import { useEffect, useState, useCallback } from 'react';
-import { Store, Power, Building2, Package, Users as UsersIcon } from 'lucide-react';
+import { Store, Power, Building2, Package, Users as UsersIcon, Plus } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
+import Modal from '../components/Modal.jsx';
+
+const TIENDA_VACIA = { nombre: '', plan: 'FREE', adminName: '', adminEmail: '', adminPassword: '' };
 
 const PLAN_BADGE = {
   FREE: 'bg-slate-100 text-slate-600',
@@ -27,6 +30,10 @@ export default function PanelPlataforma() {
   const [tiendas, setTiendas] = useState([]);
   const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(TIENDA_VACIA);
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -55,11 +62,47 @@ export default function PanelPlataforma() {
     patch(t.id, { activa: !t.activa });
   }
 
+  function abrirNueva() {
+    setForm(TIENDA_VACIA);
+    setFormError('');
+    setOpen(true);
+  }
+
+  async function crearTienda(e) {
+    e.preventDefault();
+    setFormError('');
+    setSaving(true);
+    try {
+      await api.post('/platform/tiendas', {
+        nombre: form.nombre.trim(),
+        plan: form.plan,
+        admin: {
+          name: form.adminName.trim(),
+          email: form.adminEmail.trim().toLowerCase(),
+          password: form.adminPassword,
+        },
+      });
+      setOpen(false);
+      load();
+    } catch (err) {
+      setFormError(errorMsg(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <Store className="text-brand-600" />
-        <h1 className="text-2xl font-bold text-slate-800">Tiendas de la plataforma</h1>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Store className="text-brand-600" />
+          <h1 className="text-2xl font-bold text-slate-800">Tiendas de la plataforma</h1>
+        </div>
+        <button onClick={abrirNueva} className="btn-primary">
+          <Plus size={18} /> Nueva tienda
+        </button>
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
@@ -129,6 +172,45 @@ export default function PanelPlataforma() {
           </tbody>
         </table>
       </div>
+
+      <Modal title="Nueva tienda" open={open} onClose={() => setOpen(false)}>
+        <form onSubmit={crearTienda} className="space-y-4">
+          <div>
+            <label className="label">Nombre de la tienda</label>
+            <input className="input" value={form.nombre} onChange={setField('nombre')} required autoFocus placeholder="Mi Tiendita" />
+          </div>
+          <div>
+            <label className="label">Plan</label>
+            <select className="input" value={form.plan} onChange={setField('plan')}>
+              <option value="FREE">FREE</option>
+              <option value="BASIC">BASIC</option>
+              <option value="PRO">PRO</option>
+            </select>
+          </div>
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-sm font-medium text-slate-600 mb-2">Administrador de la tienda</p>
+            <div className="space-y-3">
+              <div>
+                <label className="label">Nombre</label>
+                <input className="input" value={form.adminName} onChange={setField('adminName')} required placeholder="Juan Pérez" />
+              </div>
+              <div>
+                <label className="label">Email</label>
+                <input type="email" className="input" value={form.adminEmail} onChange={setField('adminEmail')} required placeholder="admin@tienda.com" />
+              </div>
+              <div>
+                <label className="label">Contraseña</label>
+                <input type="password" className="input" value={form.adminPassword} onChange={setField('adminPassword')} required placeholder="mínimo 6 caracteres" />
+              </div>
+            </div>
+          </div>
+          {formError && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{formError}</p>}
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setOpen(false)} className="btn-secondary">Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Creando...' : 'Crear tienda'}</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

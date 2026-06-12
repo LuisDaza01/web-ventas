@@ -1,6 +1,6 @@
 // Pantalla de inicio de sesión.
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ScanBarcode, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { errorMsg } from '../api/client.js';
@@ -67,13 +67,6 @@ export default function Login() {
             <LogIn size={18} /> {loading ? 'Entrando...' : 'Iniciar sesión'}
           </button>
         </form>
-
-        <p className="mt-5 text-sm text-center text-slate-500">
-          ¿No tienes cuenta?{' '}
-          <Link to="/registro" className="text-brand-600 font-medium hover:underline">
-            Registra tu tienda
-          </Link>
-        </p>
 
         <div className="mt-6 text-xs text-slate-400 border-t border-slate-100 pt-4">
           <p className="font-medium text-slate-500 mb-1">Cuenta de prueba:</p>

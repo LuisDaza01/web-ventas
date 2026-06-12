@@ -85,7 +85,6 @@ export default function Users() {
             <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
               <option value="CAJERO">Cajero (solo vende)</option>
               <option value="ALMACEN">Almacén (productos y stock)</option>
-              <option value="ADMIN">Administrador (todo)</option>
             </select>
           </div>
           {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}

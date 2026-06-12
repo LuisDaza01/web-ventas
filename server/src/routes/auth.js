@@ -1,4 +1,6 @@
-// Rutas de autenticación: registro de tienda, login (por email) y usuario actual.
+// Rutas de autenticación: login (por email) y usuario actual.
+// El alta de tiendas la hace SOLO el SUPERADMIN (ver routes/platform.js); ya no
+// hay registro público de tiendas.
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -34,70 +36,6 @@ function signToken(user) {
     { expiresIn: process.env.JWT_EXPIRES_IN || '12h' }
   );
 }
-
-// Convierte un nombre de tienda en un slug único-ish para URL/soporte.
-function slugify(text) {
-  return String(text)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-    .slice(0, 40);
-}
-
-const registroSchema = z.object({
-  tienda: z.string().min(1, 'El nombre de la tienda es obligatorio'),
-  name: z.string().min(1, 'Tu nombre es obligatorio'),
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-});
-
-// POST /api/auth/registro  -> crea una tienda nueva + su primer usuario ADMIN
-router.post(
-  '/registro',
-  asyncHandler(async (req, res) => {
-    const { tienda, name, email, password } = registroSchema.parse(req.body);
-
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) throw new HttpError(409, 'Ese email ya está registrado.');
-
-    // slug único: si choca, agrega un sufijo numérico.
-    const baseSlug = slugify(tienda) || 'tienda';
-    let slug = baseSlug;
-    for (let i = 2; await prisma.tienda.findUnique({ where: { slug } }); i++) {
-      slug = `${baseSlug}-${i}`;
-    }
-
-    const result = await prisma.$transaction(async (tx) => {
-      const nuevaTienda = await tx.tienda.create({ data: { nombre: tienda, slug } });
-      const user = await tx.user.create({
-        data: {
-          name,
-          email,
-          username: email.split('@')[0],
-          password: bcrypt.hashSync(password, 10),
-          role: 'ADMIN',
-          tiendaId: nuevaTienda.id,
-        },
-      });
-      return { tienda: nuevaTienda, user };
-    });
-
-    const token = signToken(result.user);
-    res.status(201).json({
-      token,
-      user: {
-        id: result.user.id,
-        name: result.user.name,
-        email: result.user.email,
-        role: result.user.role,
-        tiendaId: result.user.tiendaId,
-      },
-      tienda: tiendaPublic(result.tienda),
-    });
-  })
-);
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),

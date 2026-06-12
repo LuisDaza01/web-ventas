@@ -34,12 +34,6 @@ export function AuthProvider({ children }) {
     return persist(data);
   }
 
-  // Alta de una tienda nueva + su primer usuario administrador.
-  async function registrar({ tienda, name, email, password }) {
-    const { data } = await api.post('/auth/registro', { tienda, name, email, password });
-    return persist(data);
-  }
-
   function logout() {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -56,7 +50,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, tienda, setTienda, login, registrar, logout, can }}>
+    <AuthContext.Provider value={{ user, tienda, setTienda, login, logout, can }}>
       {children}
     </AuthContext.Provider>
   );

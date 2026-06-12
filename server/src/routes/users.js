@@ -20,12 +20,14 @@ const select = {
   createdAt: true,
 };
 
+// El ADMIN de una tienda solo crea/asigna Cajero o Almacén. El rol ADMIN lo
+// asigna únicamente el SUPERADMIN (ver routes/platform.js).
 const createSchema = z.object({
   name: z.string().min(1, 'Nombre requerido'),
   email: z.string().email('Email inválido'),
   username: z.string().min(3, 'El usuario debe tener al menos 3 caracteres').optional(),
   password: z.string().min(4, 'La contraseña debe tener al menos 4 caracteres'),
-  role: z.enum(['ADMIN', 'CAJERO', 'ALMACEN']),
+  role: z.enum(['CAJERO', 'ALMACEN']),
 });
 
 // GET /api/users
@@ -62,7 +64,7 @@ router.put(
   asyncHandler(async (req, res) => {
     const schema = z.object({
       name: z.string().min(1).optional(),
-      role: z.enum(['ADMIN', 'CAJERO', 'ALMACEN']).optional(),
+      role: z.enum(['CAJERO', 'ALMACEN']).optional(),
       active: z.boolean().optional(),
       password: z.string().min(4).optional(),
     });
