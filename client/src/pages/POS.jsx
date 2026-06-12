@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera, Banknote, QrCode } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { beep } from '../utils/beep.js';
 import Modal from '../components/Modal.jsx';
 
 // El escáner (con ZXing) se carga solo al abrir la cámara, para no inflar el bundle.
@@ -40,8 +41,10 @@ export default function POS() {
     try {
       const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(bc)}`);
       addToCart(p);
+      beep(true); // bip agudo: confirma la lectura y evita re-escanear
       flash('ok', `Agregado: ${p.name}`);
     } catch (err) {
+      beep(false); // bip grave: no se encontró o hubo error
       flash('error', err?.response?.status === 404 ? `Producto no registrado (${bc}).` : errorMsg(err));
     }
   }
