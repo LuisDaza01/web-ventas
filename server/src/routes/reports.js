@@ -33,6 +33,49 @@ function rangeFromQuery(query) {
   };
 }
 
+// GET /api/reports/series?from=&to=&tzOffset=  -> ventas y ganancia POR DÍA.
+// tzOffset (minutos, como Date.getTimezoneOffset del cliente) permite agrupar
+// por el día LOCAL del usuario aunque el servidor corra en UTC.
+router.get(
+  '/series',
+  asyncHandler(async (req, res) => {
+    const { start, end } = rangeFromQuery(req.query);
+    const tzOffset = Number(req.query.tzOffset) || 0;
+
+    const sales = await prisma.sale.findMany({
+      where: { createdAt: { gte: start, lte: end } },
+      include: { items: true },
+    });
+
+    const byDay = new Map();
+    for (const s of sales) {
+      // Instante desplazado a hora local -> su fecha YYYY-MM-DD es el día local.
+      const day = new Date(s.createdAt.getTime() - tzOffset * 60000).toISOString().slice(0, 10);
+      let b = byDay.get(day);
+      if (!b) {
+        b = { day, ventas: 0, ganancia: 0, numeroVentas: 0 };
+        byDay.set(day, b);
+      }
+      b.ventas += Number(s.total);
+      b.numeroVentas += 1;
+      for (const it of s.items) {
+        b.ganancia += (Number(it.unitPrice) - Number(it.unitCost)) * it.quantity;
+      }
+    }
+
+    const series = [...byDay.values()]
+      .map((b) => ({
+        day: b.day,
+        ventas: Number(b.ventas.toFixed(2)),
+        ganancia: Number(b.ganancia.toFixed(2)),
+        numeroVentas: b.numeroVentas,
+      }))
+      .sort((a, b) => a.day.localeCompare(b.day));
+
+    res.json(series);
+  })
+);
+
 // GET /api/reports/summary?from=&to=  -> resumen de ventas y ganancia del rango
 router.get(
   '/summary',
