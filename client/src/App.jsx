@@ -6,6 +6,7 @@ import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Products from './pages/Products.jsx';
 import POS from './pages/POS.jsx';
+import Catalogo from './pages/Catalogo.jsx';
 import Purchases from './pages/Purchases.jsx';
 import Reports from './pages/Reports.jsx';
 import Users from './pages/Users.jsx';
@@ -50,6 +51,7 @@ export default function App() {
         element={<Protected allow={['SUPERADMIN']}><UsuariosPlataforma /></Protected>}
       />
       <Route path="/pos" element={<Protected allow={['ADMIN', 'CAJERO']}><POS /></Protected>} />
+      <Route path="/catalogo" element={<Protected allow={['ADMIN', 'CAJERO']}><Catalogo /></Protected>} />
       <Route
         path="/productos"
         element={<Protected allow={['ADMIN', 'ALMACEN']}><Products /></Protected>}

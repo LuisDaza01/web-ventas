@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ScanBarcode,
+  LayoutGrid,
   Package,
   TruckIcon,
   BarChart3,
@@ -16,11 +17,13 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 
 const NAV = [
   { to: '/plataforma', label: 'Tiendas', icon: Store, roles: ['SUPERADMIN'] },
   { to: '/plataforma/usuarios', label: 'Usuarios', icon: UsersIcon, roles: ['SUPERADMIN'] },
   { to: '/', label: 'Inicio', icon: LayoutDashboard, roles: ['ADMIN', 'CAJERO', 'ALMACEN'] },
+  { to: '/catalogo', label: 'Catálogo', icon: LayoutGrid, roles: ['ADMIN', 'CAJERO'] },
   { to: '/pos', label: 'Punto de venta', icon: ScanBarcode, roles: ['ADMIN', 'CAJERO'] },
   { to: '/productos', label: 'Productos', icon: Package, roles: ['ADMIN', 'ALMACEN'] },
   { to: '/compras', label: 'Entrada de stock', icon: TruckIcon, roles: ['ADMIN', 'ALMACEN'] },
@@ -39,6 +42,7 @@ const ROLE_LABEL = {
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const { totalItems } = useCart();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -75,6 +79,11 @@ export default function Layout({ children }) {
               }
             >
               <Icon size={18} /> {label}
+              {to === '/pos' && totalItems > 0 && (
+                <span className="ml-auto bg-brand-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                  {totalItems}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>

@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera, Banknote, QrCode } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import { useCart } from '../context/CartContext.jsx';
 import { beep } from '../utils/beep.js';
 import Modal from '../components/Modal.jsx';
 
@@ -11,8 +12,8 @@ const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
 
 export default function POS() {
   const { tienda } = useAuth();
+  const { cart, addItem, incQty, decQty, removeItem, clear, total } = useCart();
   const [code, setCode] = useState('');
-  const [cart, setCart] = useState([]); // { id, name, salePrice, stock, qty }
   const [message, setMessage] = useState(null); // { type: 'error'|'ok', text }
   const [paid, setPaid] = useState('');
   const [metodoPago, setMetodoPago] = useState('EFECTIVO'); // 'EFECTIVO' | 'QR'
@@ -25,7 +26,6 @@ export default function POS() {
   const focusInput = () => inputRef.current?.focus();
   useEffect(() => { focusInput(); }, []);
 
-  const total = cart.reduce((s, i) => s + i.salePrice * i.qty, 0);
   const change = (Number(paid) || 0) - total;
 
   function flash(type, text) {
@@ -40,9 +40,9 @@ export default function POS() {
     if (!bc) return;
     try {
       const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(bc)}`);
-      addToCart(p);
-      beep(true); // bip agudo: confirma la lectura y evita re-escanear
-      flash('ok', `Agregado: ${p.name}`);
+      const r = addItem(p);
+      beep(r.ok); // bip agudo si se agregó; grave si no había stock
+      flash(r.ok ? 'ok' : 'error', r.ok ? `Agregado: ${p.name}` : r.message);
     } catch (err) {
       beep(false); // bip grave: no se encontró o hubo error
       flash('error', err?.response?.status === 404 ? `Producto no registrado (${bc}).` : errorMsg(err));
@@ -59,39 +59,10 @@ export default function POS() {
     focusInput();
   }
 
-  function addToCart(p) {
-    setCart((prev) => {
-      const existing = prev.find((i) => i.id === p.id);
-      const currentQty = existing?.qty || 0;
-      if (currentQty + 1 > p.stock) {
-        flash('error', `Stock insuficiente de "${p.name}" (disponible: ${p.stock}).`);
-        return prev;
-      }
-      if (existing) {
-        return prev.map((i) => (i.id === p.id ? { ...i, qty: i.qty + 1 } : i));
-      }
-      return [...prev, { id: p.id, name: p.name, salePrice: p.salePrice, stock: p.stock, qty: 1 }];
-    });
-  }
-
+  // Sube/baja la cantidad de una línea; avisa si choca con el stock.
   function changeQty(id, delta) {
-    setCart((prev) =>
-      prev
-        .map((i) => {
-          if (i.id !== id) return i;
-          const qty = i.qty + delta;
-          if (qty > i.stock) {
-            flash('error', `Solo hay ${i.stock} en stock de "${i.name}".`);
-            return i;
-          }
-          return { ...i, qty };
-        })
-        .filter((i) => i.qty > 0)
-    );
-  }
-
-  function removeItem(id) {
-    setCart((prev) => prev.filter((i) => i.id !== id));
+    const r = delta > 0 ? incQty(id) : decQty(id);
+    if (r && r.ok === false && r.message) flash('error', r.message);
   }
 
   async function confirmSale() {
@@ -110,7 +81,7 @@ export default function POS() {
         metodoPago,
       });
       setReceipt(data);
-      setCart([]);
+      clear();
       setPaid('');
       setMetodoPago('EFECTIVO');
     } catch (err) {
