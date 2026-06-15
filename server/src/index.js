@@ -26,8 +26,10 @@ app.use(
 );
 app.use(express.json());
 
-// Imágenes subidas, servidas de forma estática.
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Imágenes subidas, servidas de forma estática. UPLOAD_DIR permite apuntar a un
+// volumen persistente (mismo valor que usa routes/catalog.js para guardarlas).
+const uploadsDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'uploads');
+app.use('/uploads', express.static(uploadsDir));
 
 // Salud del servicio.
 app.get('/api/health', (_req, res) => res.json({ ok: true, service: 'web-ventas-api' }));

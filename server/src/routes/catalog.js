@@ -54,8 +54,11 @@ router.post(
 );
 
 // ---------- Subida de imágenes ----------
+// La carpeta es configurable con UPLOAD_DIR para apuntar a un volumen persistente
+// (en Railway el disco del contenedor es efímero y se borra en cada deploy).
+// Debe coincidir con la carpeta que sirve index.js en /uploads.
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const uploadDir = path.join(__dirname, '..', '..', 'uploads');
+const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', 'uploads');
 fs.mkdirSync(uploadDir, { recursive: true });
 
 const storage = multer.diskStorage({
