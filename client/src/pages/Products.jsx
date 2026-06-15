@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { Plus, Search, Pencil, Trash2, AlertTriangle, Camera } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
@@ -18,6 +19,7 @@ export default function Products() {
   const [suppliers, setSuppliers] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const confirm = useConfirm();
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -121,7 +123,13 @@ export default function Products() {
   }
 
   async function handleDelete(p) {
-    if (!confirm(`¿Eliminar "${p.name}"? Se ocultará pero se conserva el historial.`)) return;
+    const ok = await confirm({
+      title: 'Eliminar producto',
+      message: `¿Eliminar "${p.name}"? Se ocultará pero se conserva el historial.`,
+      confirmText: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
     await api.delete(`/products/${p.id}`);
     load();
   }

@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, UserX } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACEN: 'Almacén' };
@@ -12,6 +13,7 @@ export default function Users() {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '', role: 'CAJERO' });
   const [error, setError] = useState('');
+  const confirm = useConfirm();
 
   const load = useCallback(() => api.get('/users').then((r) => setUsers(r.data)), []);
   useEffect(() => { load(); }, [load]);
@@ -31,7 +33,13 @@ export default function Users() {
 
   async function toggleActive(u) {
     if (u.active) {
-      if (!confirm(`¿Desactivar a ${u.name}?`)) return;
+      const ok = await confirm({
+        title: 'Desactivar usuario',
+        message: `¿Desactivar a ${u.name}? No podrá iniciar sesión.`,
+        confirmText: 'Desactivar',
+        danger: true,
+      });
+      if (!ok) return;
       await api.delete(`/users/${u.id}`);
     } else {
       await api.put(`/users/${u.id}`, { active: true });

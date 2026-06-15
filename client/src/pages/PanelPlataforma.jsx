@@ -1,7 +1,8 @@
 // Panel de plataforma (SUPERADMIN): administra todas las tiendas del SaaS.
 import { useEffect, useState, useCallback } from 'react';
-import { Store, Power, Building2, Package, Users as UsersIcon, Plus } from 'lucide-react';
+import { Store, Power, Building2, Package, Users as UsersIcon, Plus, Trash2 } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const TIENDA_VACIA = { nombre: '', plan: 'FREE', adminName: '', adminEmail: '', adminPassword: '' };
@@ -30,10 +31,12 @@ export default function PanelPlataforma() {
   const [tiendas, setTiendas] = useState([]);
   const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(TIENDA_VACIA);
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const confirm = useConfirm();
 
   const load = useCallback(async () => {
     try {
@@ -57,9 +60,40 @@ export default function PanelPlataforma() {
     }
   }
 
-  function toggleActiva(t) {
-    if (t.activa && !confirm(`¿Suspender la tienda "${t.nombre}"? No podrá iniciar sesión.`)) return;
+  async function toggleActiva(t) {
+    if (t.activa) {
+      const ok = await confirm({
+        title: 'Suspender tienda',
+        message: `¿Suspender la tienda "${t.nombre}"? No podrá iniciar sesión.`,
+        confirmText: 'Suspender',
+        danger: true,
+      });
+      if (!ok) return;
+    }
     patch(t.id, { activa: !t.activa });
+  }
+
+  async function eliminarTienda(t) {
+    const ok = await confirm({
+      title: 'Eliminar tienda',
+      message: `¿Eliminar "${t.nombre}"? Si no tiene ventas se borra por completo; si tiene historial, se suspende para conservar los reportes.`,
+      confirmText: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
+    setError('');
+    setInfo('');
+    try {
+      const { data } = await api.delete(`/platform/tiendas/${t.id}`);
+      setInfo(
+        data.deleted
+          ? `Tienda "${t.nombre}" eliminada por completo.`
+          : `"${t.nombre}" tiene historial: se suspendió en lugar de eliminarse.`
+      );
+      load();
+    } catch (err) {
+      setError(errorMsg(err));
+    }
   }
 
   function abrirNueva() {
@@ -106,6 +140,7 @@ export default function PanelPlataforma() {
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+      {info && <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">{info}</p>}
 
       {stats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -155,9 +190,12 @@ export default function PanelPlataforma() {
                     {t.activa ? 'Activa' : 'Suspendida'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => toggleActiva(t)} className="btn-secondary !py-1 !px-2 text-xs">
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <button onClick={() => toggleActiva(t)} className="btn-secondary !py-1 !px-2 text-xs mr-1">
                     <Power size={14} /> {t.activa ? 'Suspender' : 'Activar'}
+                  </button>
+                  <button onClick={() => eliminarTienda(t)} className="btn-danger !py-1 !px-2 text-xs">
+                    <Trash2 size={14} /> Eliminar
                   </button>
                 </td>
               </tr>

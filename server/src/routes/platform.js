@@ -175,7 +175,9 @@ router.put(
   })
 );
 
-// DELETE /api/platform/users/:id  -> da de baja (desactiva, conserva historial)
+// DELETE /api/platform/users/:id  -> borra de verdad si el usuario no tiene
+// historial (ventas/compras/movimientos); si lo tiene, lo oculta (active:false)
+// para no perder los reportes.
 router.delete(
   '/users/:id',
   asyncHandler(async (req, res) => {
@@ -183,10 +185,54 @@ router.delete(
     const existing = await prisma.user.findUnique({ where: { id } });
     if (!existing) throw new HttpError(404, 'Usuario no encontrado.');
     if (existing.role === 'SUPERADMIN') {
-      throw new HttpError(403, 'No se puede dar de baja a un superadmin.');
+      throw new HttpError(403, 'No se puede eliminar a un superadmin.');
     }
-    await prisma.user.update({ where: { id }, data: { active: false } });
-    res.json({ ok: true });
+
+    const [sales, purchases, movements] = await Promise.all([
+      prisma.sale.count({ where: { userId: id } }),
+      prisma.purchase.count({ where: { userId: id } }),
+      prisma.stockMovement.count({ where: { userId: id } }),
+    ]);
+
+    if (sales + purchases + movements > 0) {
+      await prisma.user.update({ where: { id }, data: { active: false } });
+      return res.json({ ok: true, deleted: false, hidden: true });
+    }
+    await prisma.user.delete({ where: { id } });
+    res.json({ ok: true, deleted: true });
+  })
+);
+
+// DELETE /api/platform/tiendas/:id  -> borra de verdad la tienda y sus datos si
+// no tiene historial financiero (ventas/compras); si lo tiene, la suspende
+// (activa:false) para conservar los reportes.
+router.delete(
+  '/tiendas/:id',
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const tienda = await prisma.tienda.findUnique({ where: { id } });
+    if (!tienda) throw new HttpError(404, 'Tienda no encontrada.');
+
+    const [sales, purchases] = await Promise.all([
+      prisma.sale.count({ where: { tiendaId: id } }),
+      prisma.purchase.count({ where: { tiendaId: id } }),
+    ]);
+
+    if (sales + purchases > 0) {
+      await prisma.tienda.update({ where: { id }, data: { activa: false } });
+      return res.json({ ok: true, deleted: false, suspended: true });
+    }
+
+    // Sin historial: borra la tienda y sus datos en orden de dependencias.
+    await prisma.$transaction(async (tx) => {
+      await tx.stockMovement.deleteMany({ where: { tiendaId: id } });
+      await tx.product.deleteMany({ where: { tiendaId: id } });
+      await tx.category.deleteMany({ where: { tiendaId: id } });
+      await tx.supplier.deleteMany({ where: { tiendaId: id } });
+      await tx.user.deleteMany({ where: { tiendaId: id } });
+      await tx.tienda.delete({ where: { id } });
+    });
+    res.json({ ok: true, deleted: true });
   })
 );
 

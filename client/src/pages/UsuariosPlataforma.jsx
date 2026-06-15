@@ -1,8 +1,9 @@
 // Usuarios de la plataforma (SUPERADMIN): ve y administra los usuarios de TODAS
 // las tiendas. Puede editar nombre/rol, cambiar la contraseña y dar de baja.
 import { useEffect, useState, useCallback } from 'react';
-import { Users as UsersIcon, Pencil, UserX, UserCheck } from 'lucide-react';
+import { Users as UsersIcon, Pencil, Trash2, UserCheck } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
+import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACEN: 'Almacén' };
@@ -17,6 +18,8 @@ export default function UsuariosPlataforma() {
   const [tiendas, setTiendas] = useState([]);
   const [filtro, setFiltro] = useState(''); // tiendaId o '' (todas)
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const confirm = useConfirm();
 
   // Edición de un usuario.
   const [editing, setEditing] = useState(null); // objeto usuario o null
@@ -63,14 +66,32 @@ export default function UsuariosPlataforma() {
     }
   }
 
-  async function toggleActive(u) {
+  async function eliminar(u) {
+    const ok = await confirm({
+      title: 'Eliminar usuario',
+      message: `¿Eliminar a ${u.name}? Si no tiene ventas registradas se borra por completo; si tiene historial, se da de baja para conservar los reportes.`,
+      confirmText: 'Eliminar',
+      danger: true,
+    });
+    if (!ok) return;
+    setError('');
+    setInfo('');
     try {
-      if (u.active) {
-        if (!confirm(`¿Dar de baja a ${u.name}? No podrá iniciar sesión.`)) return;
-        await api.delete(`/platform/users/${u.id}`);
-      } else {
-        await api.put(`/platform/users/${u.id}`, { active: true });
-      }
+      const { data } = await api.delete(`/platform/users/${u.id}`);
+      setInfo(
+        data.deleted
+          ? `Usuario "${u.name}" eliminado por completo.`
+          : `"${u.name}" tiene historial: se dio de baja en lugar de eliminarse.`
+      );
+      load();
+    } catch (err) {
+      setError(errorMsg(err));
+    }
+  }
+
+  async function activar(u) {
+    try {
+      await api.put(`/platform/users/${u.id}`, { active: true });
       load();
     } catch (err) {
       setError(errorMsg(err));
@@ -85,6 +106,7 @@ export default function UsuariosPlataforma() {
       </div>
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+      {info && <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">{info}</p>}
 
       {/* Filtro por tienda */}
       <div className="card p-4 flex flex-wrap items-end gap-3">
@@ -124,9 +146,11 @@ export default function UsuariosPlataforma() {
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <button onClick={() => abrirEdicion(u)} className="btn-secondary !py-1 !px-2 text-xs mr-1"><Pencil size={14} /> Editar</button>
-                  <button onClick={() => toggleActive(u)} className="btn-secondary !py-1 !px-2 text-xs">
-                    {u.active ? <><UserX size={14} /> Baja</> : <><UserCheck size={14} /> Activar</>}
-                  </button>
+                  {u.active ? (
+                    <button onClick={() => eliminar(u)} className="btn-danger !py-1 !px-2 text-xs"><Trash2 size={14} /> Eliminar</button>
+                  ) : (
+                    <button onClick={() => activar(u)} className="btn-secondary !py-1 !px-2 text-xs"><UserCheck size={14} /> Activar</button>
+                  )}
                 </td>
               </tr>
             ))}
