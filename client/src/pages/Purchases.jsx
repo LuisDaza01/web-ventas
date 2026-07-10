@@ -69,7 +69,7 @@ export default function Purchases() {
         updatePrices,
         items: lines.map((l) => ({ productId: l.id, quantity: Number(l.qty), unitCost: Number(l.unitCost) })),
       });
-      flash('ok', 'Entrada de stock registrada correctamente. ✅');
+      flash('ok', 'Entrada de stock registrada correctamente.');
       setLines([]);
       setNote('');
     } catch (err) {
@@ -80,11 +80,14 @@ export default function Purchases() {
   }
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-2xl font-bold text-slate-800">Entrada de stock</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="micro mb-2">Inventario</p>
+        <h1 className="display text-3xl leading-tight">Entrada de stock</h1>
+      </div>
 
       <form onSubmit={handleScan} className="card p-4 flex items-center gap-3">
-        <ScanBarcode className="text-amber-600 shrink-0" size={28} />
+        <ScanBarcode className="text-ink shrink-0" size={26} strokeWidth={1.25} />
         <input
           ref={inputRef}
           className="input"
@@ -99,7 +102,7 @@ export default function Purchases() {
           className="btn-secondary shrink-0"
           title="Escanear con la cámara"
         >
-          <Camera size={18} /> Cámara
+          <Camera size={16} strokeWidth={1.5} /> Cámara
         </button>
       </form>
 
@@ -117,49 +120,49 @@ export default function Purchases() {
       )}
 
       {message && (
-        <div className={`rounded-lg px-4 py-2 text-sm ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+        <div className={message.type === 'error' ? 'note-error' : 'note-ok'}>
           {message.text}
         </div>
       )}
 
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
-            <tr>
-              <th className="px-4 py-3 font-medium">Producto</th>
-              <th className="px-4 py-3 font-medium text-center">Cantidad</th>
-              <th className="px-4 py-3 font-medium text-right">Costo unitario</th>
-              <th className="px-4 py-3 font-medium text-right">Subtotal</th>
+          <thead className="text-left border-b border-line">
+            <tr className="micro">
+              <th className="px-5 py-3 font-medium">Producto</th>
+              <th className="px-5 py-3 font-medium text-center">Cantidad</th>
+              <th className="px-5 py-3 font-medium text-right">Costo unitario</th>
+              <th className="px-5 py-3 font-medium text-right">Subtotal</th>
               <th className="px-2"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {lines.map((l) => (
               <tr key={l.id}>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-slate-700">{l.name}</p>
-                  <p className="text-xs text-slate-400 font-mono">{l.barcode}</p>
+                <td className="px-5 py-3">
+                  <p className="font-display font-medium text-ink">{l.name}</p>
+                  <p className="text-xs text-gris font-mono">{l.barcode}</p>
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-5 py-3 text-center">
                   <input type="number" min="1" className="input w-20 text-center" value={l.qty} onChange={(e) => update(l.id, 'qty', e.target.value)} />
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-5 py-3 text-right">
                   <input type="number" min="0" step="0.01" className="input w-28 text-right ml-auto" value={l.unitCost} onChange={(e) => update(l.id, 'unitCost', e.target.value)} />
                 </td>
-                <td className="px-4 py-3 text-right font-medium">{money((Number(l.unitCost) || 0) * (Number(l.qty) || 0))}</td>
+                <td className="px-5 py-3 text-right font-display font-medium text-ink">{money((Number(l.unitCost) || 0) * (Number(l.qty) || 0))}</td>
                 <td className="px-2">
-                  <button onClick={() => setLines((p) => p.filter((x) => x.id !== l.id))} className="p-2 text-slate-400 hover:text-red-600"><Trash2 size={16} /></button>
+                  <button onClick={() => setLines((p) => p.filter((x) => x.id !== l.id))} className="p-2 text-gris hover:text-accent"><Trash2 size={15} strokeWidth={1.5} /></button>
                 </td>
               </tr>
             ))}
             {lines.length === 0 && (
-              <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400">Escanea un producto para registrar su ingreso.</td></tr>
+              <tr><td colSpan={5} className="px-5 py-14 text-center text-gris halftone">Escanea un producto para registrar su ingreso.</td></tr>
             )}
           </tbody>
         </table>
       </div>
 
-      <div className="card p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="card p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className="label">Proveedor (opcional)</label>
           <select className="input" value={supplierId} onChange={(e) => setSupplierId(e.target.value)}>
@@ -171,13 +174,16 @@ export default function Purchases() {
           <label className="label">Nota (opcional)</label>
           <input className="input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Factura, observaciones..." />
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-600">
+        <label className="flex items-center gap-2 text-sm text-gris">
           <input type="checkbox" checked={updatePrices} onChange={(e) => setUpdatePrices(e.target.checked)} />
           Actualizar el precio de compra del producto con el costo ingresado
         </label>
-        <div className="flex items-center justify-end gap-4">
-          <span className="text-lg font-bold text-slate-800">Total: {money(total)}</span>
-          <button onClick={save} disabled={saving || lines.length === 0} className="btn-primary"><Save size={18} /> {saving ? 'Guardando...' : 'Guardar entrada'}</button>
+        <div className="flex items-center justify-end gap-5">
+          <div className="text-right">
+            <p className="micro">Total</p>
+            <p className="display text-2xl">{money(total)}</p>
+          </div>
+          <button onClick={save} disabled={saving || lines.length === 0} className="btn-primary"><Save size={16} strokeWidth={1.5} /> {saving ? 'Guardando...' : 'Guardar entrada'}</button>
         </div>
       </div>
     </div>

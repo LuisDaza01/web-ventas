@@ -1,17 +1,12 @@
 // Usuarios de la plataforma (SUPERADMIN): ve y administra los usuarios de TODAS
 // las tiendas. Puede editar nombre/rol, cambiar la contraseña y dar de baja.
 import { useEffect, useState, useCallback } from 'react';
-import { Users as UsersIcon, Pencil, Trash2, UserCheck } from 'lucide-react';
+import { Pencil, Trash2, UserCheck } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACEN: 'Almacén' };
-const ROLE_BADGE = {
-  ADMIN: 'bg-purple-100 text-purple-700',
-  CAJERO: 'bg-brand-100 text-brand-700',
-  ALMACEN: 'bg-amber-100 text-amber-700',
-};
 
 export default function UsuariosPlataforma() {
   const [users, setUsers] = useState([]);
@@ -99,18 +94,18 @@ export default function UsuariosPlataforma() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <UsersIcon className="text-brand-600" />
-        <h1 className="text-2xl font-bold text-slate-800">Usuarios de la plataforma</h1>
+    <div className="space-y-6">
+      <div>
+        <p className="micro mb-2">Plataforma</p>
+        <h1 className="display text-3xl leading-tight">Usuarios de la plataforma</h1>
       </div>
 
-      {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-      {info && <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">{info}</p>}
+      {error && <p className="note-error">{error}</p>}
+      {info && <p className="note-ok">{info}</p>}
 
       {/* Filtro por tienda */}
-      <div className="card p-4 flex flex-wrap items-end gap-3">
-        <div>
+      <div className="flex flex-wrap items-end gap-4">
+        <div className="min-w-52">
           <label className="label">Tienda</label>
           <select className="input" value={filtro} onChange={(e) => setFiltro(e.target.value)}>
             <option value="">Todas las tiendas</option>
@@ -119,43 +114,43 @@ export default function UsuariosPlataforma() {
             ))}
           </select>
         </div>
-        <span className="text-sm text-slate-500 pb-2">{users.length} usuario(s)</span>
+        <span className="micro pb-2">{users.length} usuario(s)</span>
       </div>
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
-            <tr>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Tienda</th>
-              <th className="px-4 py-3 font-medium">Rol</th>
-              <th className="px-4 py-3 font-medium text-center">Estado</th>
-              <th className="px-4 py-3 font-medium text-right">Acciones</th>
+          <thead className="text-left border-b border-line">
+            <tr className="micro">
+              <th className="px-5 py-3 font-medium">Nombre</th>
+              <th className="px-5 py-3 font-medium">Email</th>
+              <th className="px-5 py-3 font-medium">Tienda</th>
+              <th className="px-5 py-3 font-medium">Rol</th>
+              <th className="px-5 py-3 font-medium text-center">Estado</th>
+              <th className="px-5 py-3 font-medium text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {users.map((u) => (
               <tr key={u.id} className={u.active ? '' : 'opacity-50'}>
-                <td className="px-4 py-3 font-medium text-slate-700">{u.name}</td>
-                <td className="px-4 py-3 text-slate-500">{u.email}</td>
-                <td className="px-4 py-3 text-slate-500">{u.tienda?.nombre || '—'}</td>
-                <td className="px-4 py-3"><span className={`badge ${ROLE_BADGE[u.role]}`}>{ROLE_LABEL[u.role] || u.role}</span></td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`badge ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{u.active ? 'Activo' : 'Inactivo'}</span>
+                <td className="px-5 py-3 font-display font-medium text-ink">{u.name}</td>
+                <td className="px-5 py-3 text-gris">{u.email}</td>
+                <td className="px-5 py-3 text-gris">{u.tienda?.nombre || '—'}</td>
+                <td className="px-5 py-3"><span className="badge badge-ink">{ROLE_LABEL[u.role] || u.role}</span></td>
+                <td className="px-5 py-3 text-center">
+                  <span className={`badge ${u.active ? 'badge-ink' : ''}`}>{u.active ? 'Activo' : 'Inactivo'}</span>
                 </td>
-                <td className="px-4 py-3 text-right whitespace-nowrap">
-                  <button onClick={() => abrirEdicion(u)} className="btn-secondary !py-1 !px-2 text-xs mr-1"><Pencil size={14} /> Editar</button>
+                <td className="px-5 py-3 text-right whitespace-nowrap">
+                  <button onClick={() => abrirEdicion(u)} className="btn-secondary !py-1 !px-2 !text-[10px] mr-1"><Pencil size={13} strokeWidth={1.5} /> Editar</button>
                   {u.active ? (
-                    <button onClick={() => eliminar(u)} className="btn-danger !py-1 !px-2 text-xs"><Trash2 size={14} /> Eliminar</button>
+                    <button onClick={() => eliminar(u)} className="btn-danger !py-1 !px-2 !text-[10px]"><Trash2 size={13} strokeWidth={1.5} /> Eliminar</button>
                   ) : (
-                    <button onClick={() => activar(u)} className="btn-secondary !py-1 !px-2 text-xs"><UserCheck size={14} /> Activar</button>
+                    <button onClick={() => activar(u)} className="btn-secondary !py-1 !px-2 !text-[10px]"><UserCheck size={13} strokeWidth={1.5} /> Activar</button>
                   )}
                 </td>
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">No hay usuarios.</td></tr>
+              <tr><td colSpan={6} className="px-5 py-10 text-center text-gris halftone">No hay usuarios.</td></tr>
             )}
           </tbody>
         </table>
@@ -179,7 +174,7 @@ export default function UsuariosPlataforma() {
             <label className="label">Nueva contraseña</label>
             <input type="password" className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Dejar en blanco para no cambiarla" />
           </div>
-          {formError && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{formError}</p>}
+          {formError && <p className="note-error">{formError}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setEditing(null)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>

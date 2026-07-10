@@ -1,6 +1,6 @@
 // Pantalla "Mi plan": plan actual de la tienda, uso vs. límites y comparativa.
 import { useEffect, useState } from 'react';
-import { Crown, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 
 const ORDER = ['FREE', 'BASIC', 'PRO'];
@@ -11,15 +11,15 @@ function UsoBar({ label, current, max }) {
   const full = max != null && current >= max;
   return (
     <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span className="text-slate-600">{label}</span>
-        <span className={`font-medium ${full ? 'text-red-600' : 'text-slate-700'}`}>
+      <div className="flex justify-between items-baseline mb-1.5">
+        <span className="micro">{label}</span>
+        <span className={`font-display font-medium ${full ? 'text-accent' : 'text-ink'}`}>
           {current} {max == null ? '/ ∞' : `/ ${max}`}
         </span>
       </div>
-      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+      <div className="h-1 bg-line overflow-hidden">
         <div
-          className={`h-full ${full ? 'bg-red-500' : 'bg-brand-500'}`}
+          className={`h-full ${full ? 'bg-accent' : 'bg-ink'}`}
           style={{ width: max == null ? '8%' : `${pct}%` }}
         />
       </div>
@@ -38,32 +38,32 @@ export default function MiPlan() {
       .catch((e) => setError(errorMsg(e)));
   }, []);
 
-  if (error) return <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>;
-  if (!data) return <p className="text-slate-400">Cargando...</p>;
+  if (error) return <p className="note-error">{error}</p>;
+  if (!data) return <p className="text-gris">Cargando...</p>;
 
   const planes = data.planes || {};
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Crown className="text-brand-600" />
-        <h1 className="text-2xl font-bold text-slate-800">Mi plan</h1>
+    <div className="space-y-8 max-w-4xl">
+      <div>
+        <p className="micro mb-2">Suscripción</p>
+        <h1 className="display text-3xl leading-tight">Mi plan</h1>
       </div>
 
       {/* Plan actual + uso */}
-      <div className="card p-5 space-y-4">
+      <div className="card p-6 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-slate-500">Plan actual</p>
-            <p className="text-xl font-bold text-slate-800">
+            <p className="micro">Plan actual</p>
+            <p className="display text-3xl mt-1">
               {planes[data.plan]?.nombre || data.plan}
             </p>
           </div>
-          <span className={`badge ${data.activa ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+          <span className={`badge ${data.activa ? 'badge-ink' : 'badge-accent'}`}>
             {data.activa ? 'Activa' : 'Suspendida'}
           </span>
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-6">
           <UsoBar label="Productos" current={data.uso.productos} max={data.limits.maxProductos} />
           <UsoBar label="Usuarios" current={data.uso.usuarios} max={data.limits.maxUsuarios} />
         </div>
@@ -76,22 +76,26 @@ export default function MiPlan() {
           if (!p) return null;
           const actual = key === data.plan;
           return (
-            <div key={key} className={`card p-5 ${actual ? 'ring-2 ring-brand-500' : ''}`}>
+            <div key={key} className={`card p-6 ${actual ? 'border-ink' : ''}`}>
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-800">{p.nombre}</h3>
-                {actual && <span className="badge bg-brand-100 text-brand-700">Actual</span>}
+                <h3 className="micro">{p.nombre}</h3>
+                {actual && <span className="badge badge-ink">Actual</span>}
               </div>
-              <p className="mt-2 text-2xl font-bold text-slate-800">
+              <p className="display text-3xl mt-3">
                 {p.precio === 0 ? 'Gratis' : `Bs ${p.precio}`}
-                {p.precio !== 0 && <span className="text-sm font-normal text-slate-400">/mes</span>}
+                {p.precio !== 0 && <span className="text-sm font-sans font-normal text-gris tracking-normal"> /mes</span>}
               </p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
+              <ul className="mt-5 pt-4 border-t border-line space-y-2.5 text-sm text-gris">
                 <li className="flex items-center gap-2">
-                  <Check size={16} className="text-emerald-500" />
+                  <span className="inline-flex items-center justify-center w-4 h-4 bg-ink text-white shrink-0">
+                    <Check size={11} strokeWidth={2.5} />
+                  </span>
                   {p.maxProductos == null ? 'Productos ilimitados' : `Hasta ${p.maxProductos} productos`}
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check size={16} className="text-emerald-500" />
+                  <span className="inline-flex items-center justify-center w-4 h-4 bg-ink text-white shrink-0">
+                    <Check size={11} strokeWidth={2.5} />
+                  </span>
                   {p.maxUsuarios == null ? 'Usuarios ilimitados' : `Hasta ${p.maxUsuarios} usuarios`}
                 </li>
               </ul>
@@ -100,7 +104,7 @@ export default function MiPlan() {
         })}
       </div>
 
-      <p className="text-sm text-slate-500 bg-slate-50 rounded-lg px-4 py-3">
+      <p className="note text-gris">
         Para cambiar de plan, realiza el pago y contáctanos: activaremos tu nuevo plan en el momento.
       </p>
     </div>

@@ -4,14 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta tipo POS, limpia y moderna.
-        brand: {
-          50: '#eef6ff',
-          100: '#d9eaff',
-          500: '#2563eb',
-          600: '#1d4ed8',
-          700: '#1e40af',
-        },
+        // Sistema editorial minimalista: papel, tinta y un solo acento.
+        paper: '#FAFAF8',
+        ink: '#0A0A0A',
+        gris: '#6B6B6B',
+        line: '#E5E5E1',
+        accent: '#C1440E',
+      },
+      fontFamily: {
+        display: ['Fraunces', 'Georgia', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+      },
+      letterSpacing: {
+        micro: '0.15em',
       },
     },
   },

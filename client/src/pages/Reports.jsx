@@ -1,6 +1,6 @@
 // Reportes: comparativos, tendencia, ventas por fecha, ganancia, top y stock.
 import { useEffect, useState, useCallback } from 'react';
-import { DollarSign, ShoppingCart, Package, TrendingUp, RefreshCw, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { RefreshCw, ArrowUp, ArrowDown, Minus } from 'lucide-react';
 import { api, money, errorMsg } from '../api/client.js';
 import { dayStartISO, dayEndISO, todayStr } from '../utils/dates.js';
 
@@ -181,29 +181,34 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Reportes</h1>
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="micro mb-2">Análisis</p>
+          <h1 className="display text-3xl leading-tight">Reportes</h1>
+        </div>
         <button onClick={loadRange} disabled={loading} className="btn-secondary" title="Actualizar">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> Actualizar
+          <RefreshCw size={14} strokeWidth={1.5} className={loading ? 'animate-spin' : ''} /> Actualizar
         </button>
       </div>
 
       {/* Filtro de periodo */}
-      <div className="card p-4 space-y-3">
+      <div className="card p-5 space-y-4">
         <div className="flex flex-wrap gap-2">
           {PRESETS.map((p) => (
             <button
               key={p.key}
               onClick={() => applyPreset(p.key)}
-              className={`rounded-lg px-3 py-2 text-sm font-medium border transition ${
-                preset === p.key ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${
+                preset === p.key
+                  ? 'bg-ink text-white border-ink'
+                  : 'border-line text-gris hover:border-ink hover:text-ink'
               }`}
             >
               {p.label}
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-wrap items-end gap-5">
           <div>
             <label className="label">Desde</label>
             <input type="date" className="input" value={from} onChange={(e) => setFromManual(e.target.value)} />
@@ -221,19 +226,19 @@ export default function Reports() {
 
       {/* Error de carga */}
       {error && (
-        <div className="card p-4 flex items-center justify-between gap-3 bg-red-50 border border-red-100">
-          <span className="text-sm text-red-700">No se pudieron cargar los reportes: {error}</span>
+        <div className="note-error flex items-center justify-between gap-3">
+          <span>No se pudieron cargar los reportes: {error}</span>
           <button onClick={loadRange} className="btn-secondary shrink-0">Reintentar</button>
         </div>
       )}
 
       {/* Tarjetas de resumen */}
       {summary && (
-        <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 ${loading ? 'opacity-60' : ''}`}>
-          <Stat icon={ShoppingCart} color="bg-brand-600" label="N.º de ventas" value={summary.numeroVentas} />
-          <Stat icon={Package} color="bg-slate-600" label="Unidades vendidas" value={summary.unidadesVendidas} />
-          <Stat icon={DollarSign} color="bg-emerald-600" label="Total vendido" value={money(summary.totalVentas)} />
-          <Stat icon={TrendingUp} color="bg-amber-600" label="Ganancia aprox." value={money(summary.gananciaAproximada)} />
+        <div className={`card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y lg:divide-y-0 lg:divide-x divide-line ${loading ? 'opacity-60' : ''}`}>
+          <Stat label="N.º de ventas" value={summary.numeroVentas} />
+          <Stat label="Unidades vendidas" value={summary.unidadesVendidas} />
+          <Stat label="Total vendido" value={money(summary.totalVentas)} />
+          <Stat label="Ganancia aprox." value={money(summary.gananciaAproximada)} />
         </div>
       )}
 
@@ -247,19 +252,19 @@ export default function Reports() {
       )}
 
       {/* Gráfico de tendencia por día */}
-      <div className="card p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-slate-800">Tendencia por día</h2>
+      <div className="card p-6">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="font-display font-medium text-lg text-ink">Tendencia por día</h2>
           <div className="flex gap-1">
             <button
               onClick={() => setMetric('ganancia')}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium border transition ${metric === 'ganancia' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ganancia' ? 'bg-ink text-white border-ink' : 'border-line text-gris hover:border-ink hover:text-ink'}`}
             >
               Ganancia
             </button>
             <button
               onClick={() => setMetric('ventas')}
-              className={`rounded-lg px-3 py-1.5 text-sm font-medium border transition ${metric === 'ventas' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ventas' ? 'bg-ink text-white border-ink' : 'border-line text-gris hover:border-ink hover:text-ink'}`}
             >
               Ventas
             </button>
@@ -270,47 +275,51 @@ export default function Reports() {
 
       {/* Estado de carga inicial (aún sin datos) */}
       {loading && !summary && (
-        <div className="card p-8 text-center text-slate-400">Cargando reportes…</div>
+        <div className="card p-8 text-center text-gris halftone">Cargando reportes…</div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Más vendidos */}
         <div className="card">
-          <h2 className="font-semibold text-slate-800 px-5 py-3 border-b border-slate-200">Productos más vendidos</h2>
+          <h2 className="font-display font-medium text-lg text-ink px-6 py-4 border-b border-line">Productos más vendidos</h2>
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-left">
-              <tr><th className="px-5 py-2 font-medium">Producto</th><th className="px-5 py-2 font-medium text-center">Unidades</th><th className="px-5 py-2 font-medium text-right">Ingresos</th></tr>
+            <thead className="text-left border-b border-line">
+              <tr className="micro"><th className="px-6 py-2.5 font-medium">Producto</th><th className="px-6 py-2.5 font-medium text-center">Unidades</th><th className="px-6 py-2.5 font-medium text-right">Ingresos</th></tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {top.map((p) => (
                 <tr key={p.productId}>
-                  <td className="px-5 py-2 font-medium text-slate-700">{p.nombre}</td>
-                  <td className="px-5 py-2 text-center">{p.unidades}</td>
-                  <td className="px-5 py-2 text-right">{money(p.ingresos)}</td>
+                  <td className="px-6 py-2.5 font-display font-medium text-ink">{p.nombre}</td>
+                  <td className="px-6 py-2.5 text-center text-gris">{p.unidades}</td>
+                  <td className="px-6 py-2.5 text-right font-display font-medium text-ink">{money(p.ingresos)}</td>
                 </tr>
               ))}
-              {top.length === 0 && <tr><td colSpan={3} className="px-5 py-6 text-center text-slate-400">Sin ventas en el rango.</td></tr>}
+              {top.length === 0 && <tr><td colSpan={3} className="px-6 py-8 text-center text-gris halftone">Sin ventas en el rango.</td></tr>}
             </tbody>
           </table>
         </div>
 
         {/* Stock actual */}
         <div className="card">
-          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200">
-            <h2 className="font-semibold text-slate-800">Stock actual</h2>
-            {stock && <span className="text-sm text-slate-500">Valor inventario: <b>{money(stock.valorInventario)}</b></span>}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-line">
+            <h2 className="font-display font-medium text-lg text-ink">Stock actual</h2>
+            {stock && (
+              <span className="text-sm text-gris">
+                Valor inventario: <b className="font-display text-ink">{money(stock.valorInventario)}</b>
+              </span>
+            )}
           </div>
           <div className="max-h-80 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-500 text-left sticky top-0">
-                <tr><th className="px-5 py-2 font-medium">Producto</th><th className="px-5 py-2 font-medium text-center">Stock</th></tr>
+              <thead className="text-left sticky top-0 bg-white border-b border-line">
+                <tr className="micro"><th className="px-6 py-2.5 font-medium">Producto</th><th className="px-6 py-2.5 font-medium text-center">Stock</th></tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {stock?.items.map((p) => (
                   <tr key={p.id}>
-                    <td className="px-5 py-2 text-slate-700">{p.nombre}</td>
-                    <td className="px-5 py-2 text-center">
-                      <span className={`badge ${p.bajoStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>{p.stock}</span>
+                    <td className="px-6 py-2.5 text-ink">{p.nombre}</td>
+                    <td className="px-6 py-2.5 text-center">
+                      <span className={`font-display font-medium ${p.bajoStock ? 'text-accent' : 'text-ink'}`}>{p.stock}</span>
                     </td>
                   </tr>
                 ))}
@@ -323,14 +332,11 @@ export default function Reports() {
   );
 }
 
-function Stat({ icon: Icon, color, label, value }) {
+function Stat({ label, value }) {
   return (
-    <div className="card p-5 flex items-center gap-4">
-      <div className={`${color} text-white rounded-xl p-3`}><Icon size={22} /></div>
-      <div>
-        <p className="text-sm text-slate-500">{label}</p>
-        <p className="text-xl font-bold text-slate-800">{value}</p>
-      </div>
+    <div className="p-6">
+      <p className="micro">{label}</p>
+      <p className="display text-3xl mt-2">{value}</p>
     </div>
   );
 }
@@ -344,18 +350,18 @@ function CompareCard({ data }) {
   const sube = diff > 0;
   const baja = diff < 0;
   const Icon = sube ? ArrowUp : baja ? ArrowDown : Minus;
-  const color = sube ? 'text-emerald-600' : baja ? 'text-red-600' : 'text-slate-400';
-  const bg = sube ? 'bg-emerald-50' : baja ? 'bg-red-50' : 'bg-slate-50';
+  // Solo la caída (pérdida) usa el acento; lo demás queda en tinta/gris.
+  const color = sube ? 'text-ink border-ink' : baja ? 'text-accent border-accent' : 'text-gris border-line';
 
   return (
-    <div className="card p-5">
-      <p className="text-sm text-slate-500">{data.label}</p>
-      <p className="text-2xl font-bold text-slate-800 mt-1">{money(actual)}</p>
-      <div className="flex items-center gap-2 mt-2">
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${bg} ${color}`}>
-          <Icon size={14} /> {previo > 0 ? `${Math.abs(pct).toFixed(0)}%` : '—'}
+    <div className="card p-6">
+      <p className="micro">{data.label}</p>
+      <p className="display text-3xl mt-2">{money(actual)}</p>
+      <div className="flex items-center gap-2 mt-3">
+        <span className={`inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] ${color}`}>
+          <Icon size={12} strokeWidth={1.5} /> {previo > 0 ? `${Math.abs(pct).toFixed(0)}%` : '—'}
         </span>
-        <span className="text-xs text-slate-400">antes: {money(previo)}</span>
+        <span className="text-xs text-gris">antes: {money(previo)}</span>
       </div>
     </div>
   );
@@ -365,14 +371,14 @@ function CompareCard({ data }) {
 function BarChart({ data, metric }) {
   const hayDatos = data.some((d) => d[metric] > 0);
   if (!data.length || !hayDatos) {
-    return <div className="h-40 flex items-center justify-center text-sm text-slate-400">Sin ventas en el periodo.</div>;
+    return <div className="h-40 flex items-center justify-center text-sm text-gris halftone">Sin ventas en el periodo.</div>;
   }
   const max = Math.max(...data.map((d) => d[metric]));
   const pocos = data.length <= 31;
 
   return (
     <div>
-      <div className="flex items-end gap-1 h-56">
+      <div className="flex items-end gap-1 h-56 border-b border-line">
         {data.map((d) => (
           <div
             key={d.day}
@@ -380,7 +386,7 @@ function BarChart({ data, metric }) {
             title={`${d.day}: ${money(d[metric])}`}
           >
             <div
-              className="w-full bg-brand-500 hover:bg-brand-600 rounded-t transition-colors"
+              className="w-full bg-ink hover:bg-ink/70 transition-colors"
               style={{ height: `${max > 0 ? (d[metric] / max) * 100 : 0}%` }}
             />
           </div>
@@ -389,14 +395,14 @@ function BarChart({ data, metric }) {
       {pocos && (
         <div className="flex gap-1 mt-1">
           {data.map((d) => (
-            <div key={d.day} className="flex-1 min-w-0 text-center text-[10px] text-slate-400">
+            <div key={d.day} className="flex-1 min-w-0 text-center text-[10px] text-gris">
               {Number(d.day.slice(8, 10))}
             </div>
           ))}
         </div>
       )}
-      <p className="text-xs text-slate-400 mt-2 text-center">
-        Máximo del periodo: <b>{money(max)}</b>
+      <p className="micro mt-3 text-center">
+        Máximo del periodo: <b className="font-display normal-case text-xs text-ink tracking-normal">{money(max)}</b>
       </p>
     </div>
   );

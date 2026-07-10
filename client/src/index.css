@@ -4,35 +4,91 @@
 
 @layer base {
   body {
-    @apply bg-slate-100 text-slate-800 antialiased;
-    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    @apply bg-paper text-ink antialiased font-sans;
+  }
+
+  /* Checkboxes editoriales: cuadrado negro con check blanco. */
+  input[type='checkbox'] {
+    @apply h-4 w-4 shrink-0 appearance-none rounded-none border border-ink bg-transparent cursor-pointer;
+  }
+  input[type='checkbox']:checked {
+    @apply bg-ink;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='square'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
   }
 }
 
 @layer components {
-  /* Componentes reutilizables tipo POS */
+  /* ——— Sistema editorial minimalista ——— */
+
+  /* Titulares y montos en serif display. */
+  .display {
+    @apply font-display font-medium tracking-tight text-ink;
+  }
+
+  /* Micro-label: MAYÚSCULAS, tracking amplio, gris. */
+  .micro {
+    @apply text-[11px] font-medium uppercase tracking-micro text-gris;
+  }
+
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-xs font-semibold uppercase tracking-micro transition disabled:opacity-40 disabled:cursor-not-allowed;
   }
+  /* Primario: rectángulo negro, texto blanco. */
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700;
+    @apply btn bg-ink text-white hover:bg-ink/85;
   }
+  /* Secundario: contorno negro fino, fondo transparente. */
   .btn-secondary {
-    @apply btn bg-white text-slate-700 border border-slate-300 hover:bg-slate-50;
+    @apply btn bg-transparent text-ink border border-ink hover:bg-ink hover:text-white;
   }
+  /* Peligro: mismo contorno, en el único acento (terracota). */
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700;
+    @apply btn bg-transparent text-accent border border-accent hover:bg-accent hover:text-white;
   }
+
+  /* Inputs con línea inferior fina (underline), sin caja. */
   .input {
-    @apply w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-none border-0 border-b border-line bg-transparent px-0 py-2 text-sm text-ink outline-none transition-colors placeholder:text-gris/50 focus:border-ink;
   }
+  select.input {
+    @apply cursor-pointer;
+  }
+
   .label {
-    @apply block text-sm font-medium text-slate-600 mb-1;
+    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-micro text-gris;
   }
+
+  /* Card: blanco papel, borde fino, sin sombra pesada. */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-slate-200;
+    @apply rounded-md border border-line bg-white;
   }
+
+  /* Badges: texto en micro-caps con borde fino, sin fondos de color. */
   .badge {
-    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    @apply inline-flex items-center gap-1 rounded-sm border border-line px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-gris;
+  }
+  .badge-ink {
+    @apply border-ink text-ink;
+  }
+  .badge-accent {
+    @apply border-accent text-accent;
+  }
+
+  /* Notas / mensajes de estado: línea lateral, nada de fondos de color. */
+  .note {
+    @apply rounded-md border border-line bg-white px-3 py-2 text-sm;
+  }
+  .note-error {
+    @apply note border-l-2 border-l-accent text-accent;
+  }
+  .note-ok {
+    @apply note border-l-2 border-l-ink text-ink;
+  }
+
+  /* Trama de puntos (halftone) para zonas vacías. */
+  .halftone {
+    background-image: radial-gradient(#d9d9d4 1px, transparent 1px);
+    background-size: 14px 14px;
   }
 }

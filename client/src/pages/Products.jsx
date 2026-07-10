@@ -1,6 +1,6 @@
 // Módulo de productos: lista, búsqueda por nombre/código, crear, editar y eliminar.
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
-import { Plus, Search, Pencil, Trash2, AlertTriangle, Camera } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Camera } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
@@ -135,18 +135,21 @@ export default function Products() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-slate-800">Productos</h1>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="micro mb-2">Inventario</p>
+          <h1 className="display text-3xl leading-tight">Productos</h1>
+        </div>
         <button onClick={openCreate} className="btn-primary">
-          <Plus size={18} /> Nuevo producto
+          <Plus size={16} strokeWidth={1.5} /> Nuevo producto
         </button>
       </div>
 
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-2.5 text-slate-400" size={18} />
+      <div className="flex items-center gap-2 border-b border-line pb-2 max-w-md">
+        <Search className="text-gris shrink-0" size={18} strokeWidth={1.5} />
         <input
-          className="input pl-10"
+          className="w-full bg-transparent border-0 text-sm text-ink outline-none placeholder:text-gris/50"
           placeholder="Buscar por nombre o código de barras..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -156,49 +159,44 @@ export default function Products() {
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Producto</th>
-                <th className="px-4 py-3 font-medium">Código</th>
-                <th className="px-4 py-3 font-medium">Categoría</th>
-                <th className="px-4 py-3 font-medium text-right">P. venta</th>
-                <th className="px-4 py-3 font-medium text-center">Stock</th>
-                <th className="px-4 py-3 font-medium text-right">Acciones</th>
+            <thead className="text-left border-b border-line">
+              <tr className="micro">
+                <th className="px-5 py-3 font-medium">Producto</th>
+                <th className="px-5 py-3 font-medium">Código</th>
+                <th className="px-5 py-3 font-medium">Categoría</th>
+                <th className="px-5 py-3 font-medium text-right">P. venta</th>
+                <th className="px-5 py-3 font-medium text-center">Stock</th>
+                <th className="px-5 py-3 font-medium text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {items.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
+                <tr key={p.id} className="hover:bg-paper transition-colors">
+                  <td className="px-5 py-3">
                     <div className="flex items-center gap-3">
                       {p.imageUrl ? (
-                        <img src={p.imageUrl} alt="" className="w-9 h-9 rounded object-cover" />
+                        <img src={p.imageUrl} alt="" className="w-9 h-9 rounded-sm object-cover border border-line" />
                       ) : (
-                        <div className="w-9 h-9 rounded bg-slate-100" />
+                        <div className="w-9 h-9 rounded-sm bg-paper halftone border border-line" />
                       )}
-                      <span className="font-medium text-slate-700">{p.name}</span>
+                      <span className="font-display font-medium text-ink">{p.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-slate-500 font-mono text-xs">{p.barcode}</td>
-                  <td className="px-4 py-3 text-slate-500">{p.category?.name || '-'}</td>
-                  <td className="px-4 py-3 text-right font-medium">{money(p.salePrice)}</td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`badge ${
-                        p.stock <= p.minStock ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'
-                      }`}
-                    >
-                      {p.stock <= p.minStock && <AlertTriangle size={12} className="mr-1" />}
+                  <td className="px-5 py-3 text-gris font-mono text-xs">{p.barcode}</td>
+                  <td className="px-5 py-3 text-gris">{p.category?.name || '—'}</td>
+                  <td className="px-5 py-3 text-right font-display font-medium text-ink">{money(p.salePrice)}</td>
+                  <td className="px-5 py-3 text-center">
+                    <span className={`font-display font-medium ${p.stock <= p.minStock ? 'text-accent' : 'text-ink'}`}>
                       {p.stock}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => openEdit(p)} className="p-2 text-slate-500 hover:text-brand-600">
-                        <Pencil size={16} />
+                      <button onClick={() => openEdit(p)} className="p-2 text-gris hover:text-ink">
+                        <Pencil size={15} strokeWidth={1.5} />
                       </button>
-                      <button onClick={() => handleDelete(p)} className="p-2 text-slate-500 hover:text-red-600">
-                        <Trash2 size={16} />
+                      <button onClick={() => handleDelete(p)} className="p-2 text-gris hover:text-accent">
+                        <Trash2 size={15} strokeWidth={1.5} />
                       </button>
                     </div>
                   </td>
@@ -206,7 +204,7 @@ export default function Products() {
               ))}
               {items.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-5 py-10 text-center text-gris halftone">
                     No hay productos que coincidan.
                   </td>
                 </tr>
@@ -222,7 +220,7 @@ export default function Products() {
             <div className="flex gap-2">
               <input className="input" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} required autoFocus />
               <button type="button" onClick={() => setScannerOpen(true)} className="btn-secondary shrink-0" title="Escanear con la cámara">
-                <Camera size={18} /> Escanear
+                <Camera size={16} strokeWidth={1.5} /> Escanear
               </button>
             </div>
           </Field>
@@ -236,7 +234,7 @@ export default function Products() {
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
               <button type="button" onClick={crearCategoria} className="btn-secondary shrink-0" title="Nueva categoría">
-                <Plus size={16} />
+                <Plus size={14} strokeWidth={1.5} />
               </button>
             </div>
           </Field>
@@ -247,7 +245,7 @@ export default function Products() {
                 {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
               <button type="button" onClick={crearProveedor} className="btn-secondary shrink-0" title="Nuevo proveedor">
-                <Plus size={16} />
+                <Plus size={14} strokeWidth={1.5} />
               </button>
             </div>
           </Field>
@@ -259,7 +257,7 @@ export default function Products() {
           </Field>
           <Field label="Stock inicial">
             <input type="number" min="0" className="input" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} disabled={!!editingId} />
-            {editingId && <p className="text-xs text-slate-400 mt-1">El stock se ajusta desde Entrada de stock o ventas.</p>}
+            {editingId && <p className="text-xs text-gris mt-1">El stock se ajusta desde Entrada de stock o ventas.</p>}
           </Field>
           <Field label="Alerta de stock bajo (mín.)">
             <input type="number" min="0" className="input" value={form.minStock} onChange={(e) => setForm({ ...form, minStock: e.target.value })} />
@@ -269,10 +267,10 @@ export default function Products() {
           </Field>
           <Field label="Imagen (opcional)">
             <input type="file" accept="image/*" className="input" onChange={handleImage} />
-            {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 w-16 h-16 rounded object-cover" />}
+            {form.imageUrl && <img src={form.imageUrl} alt="" className="mt-2 w-16 h-16 rounded-sm object-cover border border-line" />}
           </Field>
 
-          {error && <p className="sm:col-span-2 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="sm:col-span-2 note-error">{error}</p>}
 
           <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
             <button type="button" onClick={() => setModalOpen(false)} className="btn-secondary">Cancelar</button>

@@ -153,30 +153,30 @@ export default function BarcodeScanner({ open, onDetected, onClose }) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl overflow-hidden w-full max-w-md">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-          <span className="flex items-center gap-2 font-semibold text-slate-800">
-            <ScanLine size={18} className="text-brand-600" /> Escanear con cámara
+    <div className="fixed inset-0 z-50 bg-ink/80 flex items-center justify-center p-4">
+      <div className="bg-white rounded-md border border-line overflow-hidden w-full max-w-md">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-line">
+          <span className="flex items-center gap-2 font-display font-medium text-ink">
+            <ScanLine size={18} strokeWidth={1.5} /> Escanear con cámara
           </span>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-700">
-            <X size={20} />
+          <button onClick={onClose} className="p-1 text-gris hover:text-ink">
+            <X size={20} strokeWidth={1.5} />
           </button>
         </div>
 
-        <div className="relative bg-black aspect-[4/3]">
+        <div className="relative bg-ink aspect-[4/3]">
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="w-3/4 h-1/3 border-2 border-brand-400/80 rounded-lg" />
+            <div className="w-3/4 h-1/3 border border-white/80 rounded-md" />
           </div>
         </div>
 
         <div className="p-4">
           {error ? (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="note-error">{error}</p>
           ) : (
-            <p className="text-sm text-slate-500 text-center">
+            <p className="text-sm text-gris text-center">
               Apunta la cámara al código de barras o QR del producto.
             </p>
           )}

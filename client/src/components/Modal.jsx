@@ -4,15 +4,15 @@ import { X } from 'lucide-react';
 export default function Modal({ title, open, onClose, children, maxWidth = 'max-w-lg' }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-black/40">
-      <div className={`card w-full ${maxWidth} max-h-[90vh] overflow-auto`}>
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
-          <h3 className="font-semibold text-slate-800">{title}</h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <X size={20} />
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-ink/40">
+      <div className={`card w-full ${maxWidth} max-h-[90vh] overflow-auto shadow-xl shadow-ink/10`}>
+        <div className="flex items-center justify-between border-b border-line px-6 py-4">
+          <h3 className="font-display font-medium text-lg tracking-tight text-ink">{title}</h3>
+          <button onClick={onClose} className="text-gris hover:text-ink">
+            <X size={20} strokeWidth={1.5} />
           </button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );

@@ -57,15 +57,25 @@ export default function Layout({ children }) {
     <div className="min-h-screen flex">
       {/* Barra lateral */}
       <aside
-        className={`fixed lg:static z-30 inset-y-0 left-0 w-64 bg-slate-900 text-slate-200 flex flex-col transform transition-transform ${
+        className={`fixed lg:static z-30 inset-y-0 left-0 w-64 bg-paper border-r border-line flex flex-col transform transition-transform ${
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="h-16 flex items-center gap-2 px-5 border-b border-slate-800">
-          <ScanBarcode className="text-brand-500" />
-          <span className="font-bold text-white">Web Ventas</span>
+        <div className="relative h-20 flex items-end px-6 pb-4 border-b border-line overflow-hidden">
+          {/* Forma orgánica de tinta anclada a la esquina */}
+          <div
+            aria-hidden
+            className="absolute -top-8 -right-8 w-24 h-24 bg-ink"
+            style={{ borderRadius: '58% 42% 63% 37% / 55% 48% 52% 45%' }}
+          />
+          <div className="relative">
+            <p className="micro mb-0.5">Tienda</p>
+            <span className="font-display font-semibold text-xl tracking-tight text-ink">
+              Web Ventas
+            </span>
+          </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 px-3 py-5 space-y-0.5">
           {items.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
@@ -73,45 +83,47 @@ export default function Layout({ children }) {
               end={to === '/' || to === '/plataforma'}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
-                  isActive ? 'bg-brand-600 text-white' : 'hover:bg-slate-800'
+                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition border-l-2 ${
+                  isActive
+                    ? 'border-ink text-ink font-semibold bg-white'
+                    : 'border-transparent text-gris hover:text-ink'
                 }`
               }
             >
-              <Icon size={18} /> {label}
+              <Icon size={17} strokeWidth={1.5} /> {label}
               {to === '/pos' && totalItems > 0 && (
-                <span className="ml-auto bg-brand-500 text-white text-xs font-semibold rounded-full px-2 py-0.5">
+                <span className="ml-auto bg-ink text-white text-[10px] font-semibold rounded-sm px-1.5 py-0.5">
                   {totalItems}
                 </span>
               )}
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-slate-800">
-          <div className="px-3 py-2 text-sm">
-            <p className="font-medium text-white">{user.name}</p>
-            <p className="text-xs text-slate-400">{ROLE_LABEL[user.role]}</p>
+        <div className="p-4 border-t border-line halftone">
+          <div className="px-2 py-2 bg-paper">
+            <p className="font-display font-medium text-ink">{user.name}</p>
+            <p className="micro mt-0.5">{ROLE_LABEL[user.role]}</p>
           </div>
-          <button onClick={handleLogout} className="btn-secondary w-full mt-2 !bg-slate-800 !text-slate-200 !border-slate-700 hover:!bg-slate-700">
-            <LogOut size={16} /> Cerrar sesión
+          <button onClick={handleLogout} className="btn-secondary w-full mt-2">
+            <LogOut size={14} strokeWidth={1.5} /> Cerrar sesión
           </button>
         </div>
       </aside>
 
       {/* Fondo oscuro en móvil cuando el menú está abierto */}
       {open && (
-        <div className="fixed inset-0 bg-black/40 z-20 lg:hidden" onClick={() => setOpen(false)} />
+        <div className="fixed inset-0 bg-ink/40 z-20 lg:hidden" onClick={() => setOpen(false)} />
       )}
 
       {/* Contenido */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center px-4 lg:hidden">
-          <button onClick={() => setOpen(true)} className="p-2">
-            {open ? <X /> : <Menu />}
+        <header className="h-14 bg-paper border-b border-line flex items-center px-4 lg:hidden">
+          <button onClick={() => setOpen(true)} className="p-2 text-ink">
+            {open ? <X strokeWidth={1.5} /> : <Menu strokeWidth={1.5} />}
           </button>
-          <span className="font-bold ml-2">Web Ventas</span>
+          <span className="font-display font-semibold text-lg ml-1 text-ink">Web Ventas</span>
         </header>
-        <main className="flex-1 p-4 sm:p-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-5 sm:p-8 overflow-auto">{children}</main>
       </div>
     </div>
   );
