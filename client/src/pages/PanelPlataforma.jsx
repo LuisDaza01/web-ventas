@@ -1,28 +1,17 @@
 // Panel de plataforma (SUPERADMIN): administra todas las tiendas del SaaS.
 import { useEffect, useState, useCallback } from 'react';
-import { Store, Power, Building2, Package, Users as UsersIcon, Plus, Trash2 } from 'lucide-react';
+import { Power, Plus, Trash2 } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const TIENDA_VACIA = { nombre: '', plan: 'FREE', adminName: '', adminEmail: '', adminPassword: '' };
 
-const PLAN_BADGE = {
-  FREE: 'bg-slate-100 text-slate-600',
-  BASIC: 'bg-brand-100 text-brand-700',
-  PRO: 'bg-purple-100 text-purple-700',
-};
-
-function Stat({ icon: Icon, label, value }) {
+function Stat({ label, value }) {
   return (
-    <div className="card p-4 flex items-center gap-3">
-      <div className="bg-brand-50 text-brand-600 rounded-xl p-2">
-        <Icon size={20} />
-      </div>
-      <div>
-        <p className="text-2xl font-bold text-slate-800">{value}</p>
-        <p className="text-xs text-slate-500">{label}</p>
-      </div>
+    <div className="p-5">
+      <p className="micro">{label}</p>
+      <p className="display text-3xl mt-1">{value}</p>
     </div>
   );
 }
@@ -128,81 +117,81 @@ export default function PanelPlataforma() {
   const setField = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Store className="text-brand-600" />
-          <h1 className="text-2xl font-bold text-slate-800">Tiendas de la plataforma</h1>
+    <div className="space-y-6">
+      <div className="flex items-end justify-between gap-2">
+        <div>
+          <p className="micro mb-2">Plataforma</p>
+          <h1 className="display text-3xl leading-tight">Tiendas de la plataforma</h1>
         </div>
         <button onClick={abrirNueva} className="btn-primary">
-          <Plus size={18} /> Nueva tienda
+          <Plus size={16} strokeWidth={1.5} /> Nueva tienda
         </button>
       </div>
 
-      {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
-      {info && <p className="text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">{info}</p>}
+      {error && <p className="note-error">{error}</p>}
+      {info && <p className="note-ok">{info}</p>}
 
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <Stat icon={Building2} label="Tiendas" value={stats.tiendas} />
-          <Stat icon={Power} label="Activas" value={stats.activas} />
-          <Stat icon={UsersIcon} label="Usuarios" value={stats.usuarios} />
-          <Stat icon={Package} label="Productos" value={stats.productos} />
+        <div className="card grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 divide-x divide-line">
+          <Stat label="Tiendas" value={stats.tiendas} />
+          <Stat label="Activas" value={stats.activas} />
+          <Stat label="Usuarios" value={stats.usuarios} />
+          <Stat label="Productos" value={stats.productos} />
         </div>
       )}
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
-            <tr>
-              <th className="px-4 py-3 font-medium">Tienda</th>
-              <th className="px-4 py-3 font-medium">Plan</th>
-              <th className="px-4 py-3 font-medium text-center">Usuarios</th>
-              <th className="px-4 py-3 font-medium text-center">Productos</th>
-              <th className="px-4 py-3 font-medium text-center">Ventas</th>
-              <th className="px-4 py-3 font-medium text-center">Estado</th>
-              <th className="px-4 py-3 font-medium text-right">Acción</th>
+          <thead className="text-left border-b border-line">
+            <tr className="micro">
+              <th className="px-5 py-3 font-medium">Tienda</th>
+              <th className="px-5 py-3 font-medium">Plan</th>
+              <th className="px-5 py-3 font-medium text-center">Usuarios</th>
+              <th className="px-5 py-3 font-medium text-center">Productos</th>
+              <th className="px-5 py-3 font-medium text-center">Ventas</th>
+              <th className="px-5 py-3 font-medium text-center">Estado</th>
+              <th className="px-5 py-3 font-medium text-right">Acción</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {tiendas.map((t) => (
               <tr key={t.id} className={t.activa ? '' : 'opacity-60'}>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-slate-700">{t.nombre}</p>
-                  <p className="text-xs text-slate-400">/{t.slug}</p>
+                <td className="px-5 py-3">
+                  <p className="font-display font-medium text-ink">{t.nombre}</p>
+                  <p className="text-xs text-gris">/{t.slug}</p>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-5 py-3">
                   <select
                     value={t.plan}
                     onChange={(e) => patch(t.id, { plan: e.target.value })}
-                    className={`badge border-0 cursor-pointer ${PLAN_BADGE[t.plan]}`}
+                    className="badge badge-ink cursor-pointer bg-transparent"
                   >
                     <option value="FREE">FREE</option>
                     <option value="BASIC">BASIC</option>
                     <option value="PRO">PRO</option>
                   </select>
                 </td>
-                <td className="px-4 py-3 text-center text-slate-600">{t._count.users}</td>
-                <td className="px-4 py-3 text-center text-slate-600">{t._count.products}</td>
-                <td className="px-4 py-3 text-center text-slate-600">{t._count.sales}</td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`badge ${t.activa ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                <td className="px-5 py-3 text-center text-gris">{t._count.users}</td>
+                <td className="px-5 py-3 text-center text-gris">{t._count.products}</td>
+                <td className="px-5 py-3 text-center text-gris">{t._count.sales}</td>
+                <td className="px-5 py-3 text-center">
+                  <span className={`badge ${t.activa ? 'badge-ink' : 'badge-accent'}`}>
                     {t.activa ? 'Activa' : 'Suspendida'}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right whitespace-nowrap">
-                  <button onClick={() => toggleActiva(t)} className="btn-secondary !py-1 !px-2 text-xs mr-1">
-                    <Power size={14} /> {t.activa ? 'Suspender' : 'Activar'}
+                <td className="px-5 py-3 text-right whitespace-nowrap">
+                  <button onClick={() => toggleActiva(t)} className="btn-secondary !py-1 !px-2 !text-[10px] mr-1">
+                    <Power size={13} strokeWidth={1.5} /> {t.activa ? 'Suspender' : 'Activar'}
                   </button>
-                  <button onClick={() => eliminarTienda(t)} className="btn-danger !py-1 !px-2 text-xs">
-                    <Trash2 size={14} /> Eliminar
+                  <button onClick={() => eliminarTienda(t)} className="btn-danger !py-1 !px-2 !text-[10px]">
+                    <Trash2 size={13} strokeWidth={1.5} /> Eliminar
                   </button>
                 </td>
               </tr>
             ))}
             {tiendas.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
+                <td colSpan={7} className="px-5 py-10 text-center text-gris halftone">
                   Aún no hay tiendas registradas.
                 </td>
               </tr>
@@ -225,8 +214,8 @@ export default function PanelPlataforma() {
               <option value="PRO">PRO</option>
             </select>
           </div>
-          <div className="border-t border-slate-100 pt-4">
-            <p className="text-sm font-medium text-slate-600 mb-2">Administrador de la tienda</p>
+          <div className="border-t border-line pt-4">
+            <p className="micro mb-3">Administrador de la tienda</p>
             <div className="space-y-3">
               <div>
                 <label className="label">Nombre</label>
@@ -242,7 +231,7 @@ export default function PanelPlataforma() {
               </div>
             </div>
           </div>
-          {formError && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{formError}</p>}
+          {formError && <p className="note-error">{formError}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setOpen(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Creando...' : 'Crear tienda'}</button>

@@ -1,6 +1,6 @@
 // Ajustes de la tienda (solo ADMIN): nombre, moneda, impuesto, datos del recibo y logo.
 import { useEffect, useState } from 'react';
-import { Settings, Upload, Save } from 'lucide-react';
+import { Upload, Save } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -65,28 +65,26 @@ export default function AjustesTienda() {
     }
   }
 
-  if (!form) return <p className="text-slate-400">Cargando...</p>;
+  if (!form) return <p className="text-gris">Cargando...</p>;
 
   return (
-    <div className="space-y-5 max-w-2xl">
-      <div className="flex items-center gap-2">
-        <Settings className="text-brand-600" />
-        <h1 className="text-2xl font-bold text-slate-800">Ajustes de la tienda</h1>
+    <div className="space-y-6 max-w-2xl">
+      <div>
+        <p className="micro mb-2">Configuración</p>
+        <h1 className="display text-3xl leading-tight">Ajustes de la tienda</h1>
       </div>
 
       {msg && (
-        <p className={`text-sm rounded-lg px-3 py-2 ${msg.type === 'error' ? 'text-red-600 bg-red-50' : 'text-emerald-700 bg-emerald-50'}`}>
-          {msg.text}
-        </p>
+        <p className={msg.type === 'error' ? 'note-error' : 'note-ok'}>{msg.text}</p>
       )}
 
-      <form onSubmit={guardar} className="card p-5 space-y-4">
+      <form onSubmit={guardar} className="card p-6 space-y-5">
         <div>
           <label className="label">Nombre de la tienda</label>
           <input className="input" value={form.nombre || ''} onChange={set('nombre')} required />
         </div>
 
-        <div className="grid sm:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-3 gap-5">
           <div>
             <label className="label">Símbolo de moneda</label>
             <input className="input" value={form.simbolo || ''} onChange={set('simbolo')} placeholder="Bs" />
@@ -101,7 +99,7 @@ export default function AjustesTienda() {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-5">
           <div>
             <label className="label">Dirección (recibo)</label>
             <input className="input" value={form.direccion || ''} onChange={set('direccion')} />
@@ -117,13 +115,13 @@ export default function AjustesTienda() {
           <input className="input" value={form.mensajeRecibo || ''} onChange={set('mensajeRecibo')} placeholder="¡Gracias por su compra!" />
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 gap-5 pt-2 border-t border-line">
           <div>
             <label className="label">Logo</label>
             <div className="flex items-center gap-3">
-              {form.logoUrl && <img src={form.logoUrl} alt="logo" className="h-12 object-contain rounded border border-slate-200" />}
+              {form.logoUrl && <img src={form.logoUrl} alt="logo" className="h-12 object-contain rounded-sm border border-line" />}
               <label className="btn-secondary cursor-pointer">
-                <Upload size={16} /> {uploading ? 'Subiendo...' : 'Subir logo'}
+                <Upload size={14} strokeWidth={1.5} /> {uploading ? 'Subiendo...' : 'Subir logo'}
                 <input type="file" accept="image/*" className="hidden" onChange={subirImagen('logoUrl')} disabled={uploading} />
               </label>
             </div>
@@ -131,19 +129,19 @@ export default function AjustesTienda() {
           <div>
             <label className="label">QR de cobro</label>
             <div className="flex items-center gap-3">
-              {form.qrPagoUrl && <img src={form.qrPagoUrl} alt="QR" className="h-12 object-contain rounded border border-slate-200" />}
+              {form.qrPagoUrl && <img src={form.qrPagoUrl} alt="QR" className="h-12 object-contain rounded-sm border border-line" />}
               <label className="btn-secondary cursor-pointer">
-                <Upload size={16} /> {uploading ? 'Subiendo...' : 'Subir QR'}
+                <Upload size={14} strokeWidth={1.5} /> {uploading ? 'Subiendo...' : 'Subir QR'}
                 <input type="file" accept="image/*" className="hidden" onChange={subirImagen('qrPagoUrl')} disabled={uploading} />
               </label>
             </div>
-            <p className="text-xs text-slate-400 mt-1">El cliente lo escanea para pagar (QR Simple, banco, etc.).</p>
+            <p className="text-xs text-gris mt-1.5">El cliente lo escanea para pagar (QR Simple, banco, etc.).</p>
           </div>
         </div>
 
         <div className="flex justify-end pt-2">
           <button type="submit" className="btn-primary" disabled={saving}>
-            <Save size={16} /> {saving ? 'Guardando...' : 'Guardar cambios'}
+            <Save size={14} strokeWidth={1.5} /> {saving ? 'Guardando...' : 'Guardar cambios'}
           </button>
         </div>
       </form>

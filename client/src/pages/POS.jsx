@@ -1,6 +1,6 @@
 // Punto de venta: escanear código de barras, carrito, totales, cambio y recibo.
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera, Banknote, QrCode } from 'lucide-react';
+import { ScanBarcode, Trash2, Plus, Minus, Printer, Camera, Banknote, QrCode } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -93,14 +93,19 @@ export default function POS() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 h-full">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
       {/* Columna izquierda: escáner + carrito */}
       <div className="lg:col-span-2 space-y-4">
+        <div>
+          <p className="micro mb-2">Caja</p>
+          <h1 className="display text-3xl leading-tight">Punto de venta</h1>
+        </div>
+
         <form onSubmit={handleScan} className="card p-4 flex items-center gap-3">
-          <ScanBarcode className="text-brand-600 shrink-0" size={28} />
+          <ScanBarcode className="text-ink shrink-0" size={26} strokeWidth={1.25} />
           <input
             ref={inputRef}
-            className="input text-lg"
+            className="input text-base"
             placeholder="Escanea o escribe el código de barras y presiona Enter"
             value={code}
             onChange={(e) => setCode(e.target.value)}
@@ -112,47 +117,47 @@ export default function POS() {
             className="btn-secondary shrink-0"
             title="Escanear con la cámara del dispositivo"
           >
-            <Camera size={18} /> Cámara
+            <Camera size={16} strokeWidth={1.5} /> Cámara
           </button>
         </form>
 
         {message && (
-          <div className={`rounded-lg px-4 py-2 text-sm ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>
+          <div className={message.type === 'error' ? 'note-error' : 'note-ok'}>
             {message.text}
           </div>
         )}
 
         <div className="card overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-500 text-left">
-              <tr>
-                <th className="px-4 py-3 font-medium">Producto</th>
-                <th className="px-4 py-3 font-medium text-right">Precio</th>
-                <th className="px-4 py-3 font-medium text-center">Cantidad</th>
-                <th className="px-4 py-3 font-medium text-right">Subtotal</th>
+            <thead className="text-left border-b border-line">
+              <tr className="micro">
+                <th className="px-5 py-3 font-medium">Producto</th>
+                <th className="px-5 py-3 font-medium text-right">Precio</th>
+                <th className="px-5 py-3 font-medium text-center">Cantidad</th>
+                <th className="px-5 py-3 font-medium text-right">Subtotal</th>
                 <th className="px-2"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {cart.map((i) => (
                 <tr key={i.id}>
-                  <td className="px-4 py-3 font-medium text-slate-700">{i.name}</td>
-                  <td className="px-4 py-3 text-right">{money(i.salePrice)}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-3 font-display font-medium text-ink">{i.name}</td>
+                  <td className="px-5 py-3 text-right text-gris">{money(i.salePrice)}</td>
+                  <td className="px-5 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => changeQty(i.id, -1)} className="p-1 rounded bg-slate-100 hover:bg-slate-200"><Minus size={14} /></button>
-                      <span className="w-8 text-center font-medium">{i.qty}</span>
-                      <button onClick={() => changeQty(i.id, 1)} className="p-1 rounded bg-slate-100 hover:bg-slate-200"><Plus size={14} /></button>
+                      <button onClick={() => changeQty(i.id, -1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink transition-colors"><Minus size={13} strokeWidth={1.5} /></button>
+                      <span className="w-8 text-center font-medium text-ink">{i.qty}</span>
+                      <button onClick={() => changeQty(i.id, 1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink transition-colors"><Plus size={13} strokeWidth={1.5} /></button>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-right font-medium">{money(i.salePrice * i.qty)}</td>
+                  <td className="px-5 py-3 text-right font-display font-medium text-ink">{money(i.salePrice * i.qty)}</td>
                   <td className="px-2">
-                    <button onClick={() => removeItem(i.id)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 size={16} /></button>
+                    <button onClick={() => removeItem(i.id)} className="p-2 text-gris hover:text-accent"><Trash2 size={15} strokeWidth={1.5} /></button>
                   </td>
                 </tr>
               ))}
               {cart.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-12 text-center text-slate-400">Escanea un producto para empezar la venta.</td></tr>
+                <tr><td colSpan={5} className="px-5 py-14 text-center text-gris halftone">Escanea un producto para empezar la venta.</td></tr>
               )}
             </tbody>
           </table>
@@ -160,13 +165,16 @@ export default function POS() {
       </div>
 
       {/* Columna derecha: cobro */}
-      <div className="card p-5 h-fit lg:sticky lg:top-6 space-y-4">
-        <h2 className="font-semibold text-slate-800 text-lg">Cobro</h2>
-        <div className="space-y-1 text-sm">
-          <Row label="Artículos" value={cart.reduce((s, i) => s + i.qty, 0)} />
-          <div className="flex justify-between text-xl font-bold text-slate-800 pt-2 border-t border-slate-200">
-            <span>Total</span>
-            <span>{money(total)}</span>
+      <div className="card p-6 h-fit lg:sticky lg:top-6 space-y-5">
+        <p className="micro">Cobro</p>
+        <div>
+          <div className="flex justify-between text-sm text-gris">
+            <span>Artículos</span>
+            <span>{cart.reduce((s, i) => s + i.qty, 0)}</span>
+          </div>
+          <div className="mt-3 pt-3 border-t border-line">
+            <p className="micro mb-1">Total</p>
+            <p className="display text-5xl">{money(total)}</p>
           </div>
         </div>
 
@@ -177,20 +185,16 @@ export default function POS() {
             <button
               type="button"
               onClick={() => setMetodoPago('EFECTIVO')}
-              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium border transition ${
-                metodoPago === 'EFECTIVO' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              className={metodoPago === 'EFECTIVO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}
             >
-              <Banknote size={16} /> Efectivo
+              <Banknote size={15} strokeWidth={1.5} /> Efectivo
             </button>
             <button
               type="button"
               onClick={() => setMetodoPago('QR')}
-              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium border transition ${
-                metodoPago === 'QR' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-              }`}
+              className={metodoPago === 'QR' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}
             >
-              <QrCode size={16} /> QR
+              <QrCode size={15} strokeWidth={1.5} /> QR
             </button>
           </div>
         </div>
@@ -200,25 +204,27 @@ export default function POS() {
             <div>
               <label className="label">Monto recibido</label>
               <input
-                type="number" step="0.01" min="0" className="input text-lg"
+                type="number" step="0.01" min="0" className="input text-lg font-display"
                 value={paid} onChange={(e) => setPaid(e.target.value)}
                 placeholder="0.00"
               />
             </div>
-            <div className={`flex justify-between font-semibold rounded-lg px-3 py-2 ${change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-400'}`}>
-              <span>Cambio</span>
-              <span>{money(change >= 0 ? change : 0)}</span>
+            <div className="flex items-baseline justify-between border-t border-line pt-3">
+              <span className="micro">Cambio</span>
+              <span className={`display text-2xl ${change >= 0 ? 'text-ink' : 'text-gris/50'}`}>
+                {money(change >= 0 ? change : 0)}
+              </span>
             </div>
           </>
         ) : (
           <div className="text-center">
             {tienda?.qrPagoUrl ? (
               <>
-                <p className="text-sm text-slate-500 mb-2">El cliente escanea para pagar <b>{money(total)}</b></p>
-                <img src={tienda.qrPagoUrl} alt="QR de pago" className="mx-auto max-h-56 object-contain rounded-lg border border-slate-200 p-2 bg-white" />
+                <p className="text-sm text-gris mb-2">El cliente escanea para pagar <b className="text-ink">{money(total)}</b></p>
+                <img src={tienda.qrPagoUrl} alt="QR de pago" className="mx-auto max-h-56 object-contain rounded-md border border-line p-2 bg-white" />
               </>
             ) : (
-              <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+              <p className="note-error text-left">
                 Aún no subes tu QR de cobro. Ve a <b>Ajustes → QR de cobro</b>.
               </p>
             )}
@@ -228,9 +234,9 @@ export default function POS() {
         <button
           onClick={confirmSale}
           disabled={saving || cart.length === 0 || (metodoPago === 'QR' && !tienda?.qrPagoUrl)}
-          className="btn-primary w-full text-base py-3"
+          className="btn-primary w-full py-3.5"
         >
-          <CheckCircle2 size={20} /> {saving ? 'Procesando...' : metodoPago === 'QR' ? 'Confirmar pago recibido' : 'Confirmar venta'}
+          {saving ? 'Procesando...' : metodoPago === 'QR' ? 'Confirmar pago recibido' : 'Cobrar'}
         </button>
       </div>
 
@@ -254,33 +260,24 @@ export default function POS() {
   );
 }
 
-function Row({ label, value }) {
-  return (
-    <div className="flex justify-between text-slate-600">
-      <span>{label}</span>
-      <span>{value}</span>
-    </div>
-  );
-}
-
 function Receipt({ receipt, onClose }) {
   const { tienda } = useAuth();
   if (!receipt) return null;
   return (
-    <Modal title="Venta realizada ✅" open={!!receipt} onClose={onClose}>
-      <div id="recibo" className="font-mono text-sm text-slate-700">
+    <Modal title="Venta realizada" open={!!receipt} onClose={onClose}>
+      <div id="recibo" className="font-mono text-sm text-ink">
         <div className="text-center mb-3">
           {tienda?.logoUrl && (
             <img src={tienda.logoUrl} alt="logo" className="h-12 mx-auto mb-2 object-contain" />
           )}
           <p className="font-bold text-base">{(tienda?.nombre || 'WEB VENTAS').toUpperCase()}</p>
-          {tienda?.direccion && <p className="text-xs text-slate-500">{tienda.direccion}</p>}
-          {tienda?.telefono && <p className="text-xs text-slate-500">Tel: {tienda.telefono}</p>}
-          <p className="text-xs text-slate-500">Recibo de venta #{receipt.id}</p>
-          <p className="text-xs text-slate-500">{new Date(receipt.createdAt).toLocaleString('es-BO')}</p>
-          <p className="text-xs text-slate-500">Atendió: {receipt.user?.name}</p>
+          {tienda?.direccion && <p className="text-xs text-gris">{tienda.direccion}</p>}
+          {tienda?.telefono && <p className="text-xs text-gris">Tel: {tienda.telefono}</p>}
+          <p className="text-xs text-gris">Recibo de venta #{receipt.id}</p>
+          <p className="text-xs text-gris">{new Date(receipt.createdAt).toLocaleString('es-BO')}</p>
+          <p className="text-xs text-gris">Atendió: {receipt.user?.name}</p>
         </div>
-        <div className="border-y border-dashed border-slate-300 py-2 space-y-1">
+        <div className="border-y border-dashed border-line py-2 space-y-1">
           {receipt.items.map((it) => (
             <div key={it.id} className="flex justify-between">
               <span>{it.quantity} x {it.product?.name}</span>
@@ -298,13 +295,13 @@ function Receipt({ receipt, onClose }) {
             </>
           )}
         </div>
-        <p className="text-center text-xs text-slate-400 mt-3">
+        <p className="text-center text-xs text-gris mt-3">
           {tienda?.mensajeRecibo || '¡Gracias por su compra!'}
         </p>
       </div>
       <div className="flex justify-end gap-2 mt-4 print:hidden">
         <button onClick={onClose} className="btn-secondary">Cerrar</button>
-        <button onClick={() => window.print()} className="btn-primary"><Printer size={16} /> Imprimir</button>
+        <button onClick={() => window.print()} className="btn-primary"><Printer size={15} strokeWidth={1.5} /> Imprimir</button>
       </div>
     </Modal>
   );

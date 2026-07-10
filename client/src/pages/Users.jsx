@@ -6,7 +6,6 @@ import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
 
 const ROLE_LABEL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACEN: 'Almacén' };
-const ROLE_BADGE = { ADMIN: 'bg-purple-100 text-purple-700', CAJERO: 'bg-brand-100 text-brand-700', ALMACEN: 'bg-amber-100 text-amber-700' };
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -48,34 +47,37 @@ export default function Users() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-800">Usuarios</h1>
-        <button onClick={() => setOpen(true)} className="btn-primary"><Plus size={18} /> Nuevo usuario</button>
+    <div className="space-y-6">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="micro mb-2">Equipo</p>
+          <h1 className="display text-3xl leading-tight">Usuarios</h1>
+        </div>
+        <button onClick={() => setOpen(true)} className="btn-primary"><Plus size={16} strokeWidth={1.5} /> Nuevo usuario</button>
       </div>
 
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-500 text-left">
-            <tr>
-              <th className="px-4 py-3 font-medium">Nombre</th>
-              <th className="px-4 py-3 font-medium">Email</th>
-              <th className="px-4 py-3 font-medium">Rol</th>
-              <th className="px-4 py-3 font-medium text-center">Estado</th>
-              <th className="px-4 py-3 font-medium text-right">Acciones</th>
+          <thead className="text-left border-b border-line">
+            <tr className="micro">
+              <th className="px-5 py-3 font-medium">Nombre</th>
+              <th className="px-5 py-3 font-medium">Email</th>
+              <th className="px-5 py-3 font-medium">Rol</th>
+              <th className="px-5 py-3 font-medium text-center">Estado</th>
+              <th className="px-5 py-3 font-medium text-right">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-line">
             {users.map((u) => (
               <tr key={u.id} className={u.active ? '' : 'opacity-50'}>
-                <td className="px-4 py-3 font-medium text-slate-700">{u.name}</td>
-                <td className="px-4 py-3 text-slate-500">{u.email}</td>
-                <td className="px-4 py-3"><span className={`badge ${ROLE_BADGE[u.role]}`}>{ROLE_LABEL[u.role]}</span></td>
-                <td className="px-4 py-3 text-center">
-                  <span className={`badge ${u.active ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>{u.active ? 'Activo' : 'Inactivo'}</span>
+                <td className="px-5 py-3 font-display font-medium text-ink">{u.name}</td>
+                <td className="px-5 py-3 text-gris">{u.email}</td>
+                <td className="px-5 py-3"><span className="badge badge-ink">{ROLE_LABEL[u.role]}</span></td>
+                <td className="px-5 py-3 text-center">
+                  <span className={`badge ${u.active ? 'badge-ink' : ''}`}>{u.active ? 'Activo' : 'Inactivo'}</span>
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <button onClick={() => toggleActive(u)} className="btn-secondary !py-1 !px-2 text-xs"><UserX size={14} /> {u.active ? 'Desactivar' : 'Activar'}</button>
+                <td className="px-5 py-3 text-right">
+                  <button onClick={() => toggleActive(u)} className="btn-secondary !py-1 !px-2 !text-[10px]"><UserX size={13} strokeWidth={1.5} /> {u.active ? 'Desactivar' : 'Activar'}</button>
                 </td>
               </tr>
             ))}
@@ -95,7 +97,7 @@ export default function Users() {
               <option value="ALMACEN">Almacén (productos y stock)</option>
             </select>
           </div>
-          {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+          {error && <p className="note-error">{error}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setOpen(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">Crear</button>

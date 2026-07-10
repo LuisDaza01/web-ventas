@@ -40,11 +40,11 @@ export function ConfirmProvider({ children }) {
           <div className="space-y-4">
             <div className="flex items-start gap-3">
               {state.danger && (
-                <div className="bg-red-100 text-red-600 rounded-full p-2 shrink-0">
-                  <AlertTriangle size={20} />
+                <div className="border border-accent text-accent rounded-sm p-2 shrink-0">
+                  <AlertTriangle size={18} strokeWidth={1.5} />
                 </div>
               )}
-              <p className="text-sm text-slate-600 pt-1">{state.message}</p>
+              <p className="text-sm text-gris pt-1">{state.message}</p>
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => close(false)} className="btn-secondary">{state.cancelText}</button>
