@@ -1,7 +1,9 @@
 // Entrada de stock: escanear/seleccionar productos, definir cantidad y costo, guardar.
-import { useState, useRef, useEffect } from 'react';
-import { ScanBarcode, Trash2, Save } from 'lucide-react';
+import { useState, useRef, useEffect, lazy, Suspense } from 'react';
+import { ScanBarcode, Trash2, Save, Camera } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
+
+const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
 
 export default function Purchases() {
   const [code, setCode] = useState('');
@@ -12,6 +14,7 @@ export default function Purchases() {
   const [updatePrices, setUpdatePrices] = useState(false);
   const [message, setMessage] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -26,21 +29,29 @@ export default function Purchases() {
     setTimeout(() => setMessage(null), 3000);
   }
 
-  async function handleScan(e) {
-    e.preventDefault();
-    const barcode = code.trim();
-    if (!barcode) return;
-    setCode('');
+  // Busca por código y agrega (o suma) una línea. La usan el lector y la cámara.
+  async function lookupAndAddLine(barcode) {
+    const bc = String(barcode).trim();
+    if (!bc) return;
     try {
-      const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(barcode)}`);
+      const { data: p } = await api.get(`/products/barcode/${encodeURIComponent(bc)}`);
       setLines((prev) => {
         const existing = prev.find((l) => l.id === p.id);
         if (existing) return prev.map((l) => (l.id === p.id ? { ...l, qty: l.qty + 1 } : l));
         return [...prev, { id: p.id, name: p.name, barcode: p.barcode, qty: 1, unitCost: p.purchasePrice }];
       });
+      flash('ok', `Agregado: ${p.name}`);
     } catch (err) {
-      flash('error', err?.response?.status === 404 ? `Producto no registrado (${barcode}).` : errorMsg(err));
+      flash('error', err?.response?.status === 404 ? `Producto no registrado (${bc}).` : errorMsg(err));
     }
+  }
+
+  async function handleScan(e) {
+    e.preventDefault();
+    const barcode = code.trim();
+    if (!barcode) return;
+    setCode('');
+    await lookupAndAddLine(barcode);
     inputRef.current?.focus();
   }
 
@@ -82,7 +93,28 @@ export default function Purchases() {
           onChange={(e) => setCode(e.target.value)}
         />
         <button type="submit" className="btn-primary shrink-0">Agregar</button>
+        <button
+          type="button"
+          onClick={() => setScannerOpen(true)}
+          className="btn-secondary shrink-0"
+          title="Escanear con la cámara"
+        >
+          <Camera size={18} /> Cámara
+        </button>
       </form>
+
+      {scannerOpen && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            open
+            onDetected={lookupAndAddLine}
+            onClose={() => {
+              setScannerOpen(false);
+              inputRef.current?.focus();
+            }}
+          />
+        </Suspense>
+      )}
 
       {message && (
         <div className={`rounded-lg px-4 py-2 text-sm ${message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}`}>

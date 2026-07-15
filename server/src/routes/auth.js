@@ -20,6 +20,7 @@ function tiendaPublic(t) {
     simbolo: t.simbolo,
     impuesto: toNumber(t.impuesto),
     logoUrl: t.logoUrl,
+    qrPagoUrl: t.qrPagoUrl,
     direccion: t.direccion,
     telefono: t.telefono,
     mensajeRecibo: t.mensajeRecibo,

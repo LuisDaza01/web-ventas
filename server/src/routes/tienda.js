@@ -31,6 +31,7 @@ const updateSchema = z.object({
   telefono: z.string().optional().nullable(),
   mensajeRecibo: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
+  qrPagoUrl: z.string().optional().nullable(),
 });
 
 // PUT /api/tienda -> actualiza la configuración (solo ADMIN)

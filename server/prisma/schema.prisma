@@ -36,6 +36,7 @@ model Tienda {
   telefono      String? // teléfono para el recibo
   mensajeRecibo String? // mensaje al pie del recibo
   logoUrl       String? // logo de la tienda
+  qrPagoUrl     String? // imagen del QR de cobro (el cliente lo escanea para pagar)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,17 +137,23 @@ model Product {
 }
 
 // ---------- Ventas ----------
+enum MetodoPago {
+  EFECTIVO
+  QR
+}
+
 model Sale {
-  id        Int        @id @default(autoincrement())
-  userId    Int
-  user      User       @relation(fields: [userId], references: [id])
-  tiendaId  Int
-  tienda    Tienda     @relation(fields: [tiendaId], references: [id])
-  total     Decimal    @db.Decimal(12, 2)
-  paid      Decimal    @db.Decimal(12, 2) // monto recibido
-  change    Decimal    @db.Decimal(12, 2) // cambio / vuelto
-  createdAt DateTime   @default(now())
-  items     SaleItem[]
+  id         Int        @id @default(autoincrement())
+  userId     Int
+  user       User       @relation(fields: [userId], references: [id])
+  tiendaId   Int
+  tienda     Tienda     @relation(fields: [tiendaId], references: [id])
+  total      Decimal    @db.Decimal(12, 2)
+  paid       Decimal    @db.Decimal(12, 2) // monto recibido
+  change     Decimal    @db.Decimal(12, 2) // cambio / vuelto
+  metodoPago MetodoPago @default(EFECTIVO)
+  createdAt  DateTime   @default(now())
+  items      SaleItem[]
 
   @@index([tiendaId])
   @@index([createdAt])

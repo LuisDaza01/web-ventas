@@ -18,6 +18,7 @@ const saleSchema = z.object({
     )
     .min(1, 'La venta debe tener al menos un producto'),
   paid: z.coerce.number().min(0).default(0),
+  metodoPago: z.enum(['EFECTIVO', 'QR']).default('EFECTIVO'),
 });
 
 // POST /api/sales  (admin o cajero) -> confirma la venta de forma atómica
@@ -25,7 +26,7 @@ router.post(
   '/',
   authorize('ADMIN', 'CAJERO'),
   asyncHandler(async (req, res) => {
-    const { items, paid } = saleSchema.parse(req.body);
+    const { items, paid, metodoPago } = saleSchema.parse(req.body);
 
     // Toda la operación va dentro de una transacción: si algo falla, no se
     // descuenta stock ni se guarda la venta a medias.
@@ -52,7 +53,10 @@ router.post(
         lineData.push({ product, item, unitPrice, unitCost, subtotal });
       }
 
-      if (paid < total) {
+      // En pago por QR el cliente paga el monto exacto (sin cambio).
+      // En efectivo se valida que el monto recibido alcance.
+      const montoPagado = metodoPago === 'QR' ? total : paid;
+      if (metodoPago !== 'QR' && paid < total) {
         throw new HttpError(400, `El monto recibido (${paid}) es menor al total (${total}).`);
       }
 
@@ -60,8 +64,9 @@ router.post(
         data: {
           userId: req.user.id,
           total,
-          paid,
-          change: paid - total,
+          paid: montoPagado,
+          change: montoPagado - total,
+          metodoPago,
           items: {
             create: lineData.map((l) => ({
               productId: l.product.id,
@@ -114,7 +119,7 @@ router.get(
     const where = {};
     if (from || to) {
       where.createdAt = {};
-      if (from) where.createdAt.gte = new Date(String(from));
+      if (from) where.createdAt.gte = startOfDay(String(from));
       if (to) where.createdAt.lte = endOfDay(String(to));
     }
     const sales = await prisma.sale.findMany({
@@ -162,8 +167,18 @@ function serializeSale(s) {
   };
 }
 
+// Interpreta "YYYY-MM-DD" como fecha LOCAL (no UTC) y devuelve inicio/fin del día.
+function localDate(dateStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr));
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(dateStr);
+}
+function startOfDay(dateStr) {
+  const d = localDate(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 function endOfDay(dateStr) {
-  const d = new Date(dateStr);
+  const d = localDate(dateStr);
   d.setHours(23, 59, 59, 999);
   return d;
 }

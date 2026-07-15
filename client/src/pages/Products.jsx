@@ -1,8 +1,10 @@
 // Módulo de productos: lista, búsqueda por nombre/código, crear, editar y eliminar.
-import { useEffect, useState, useCallback } from 'react';
-import { Plus, Search, Pencil, Trash2, AlertTriangle } from 'lucide-react';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
+import { Plus, Search, Pencil, Trash2, AlertTriangle, Camera } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import Modal from '../components/Modal.jsx';
+
+const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
 
 const EMPTY = {
   barcode: '', name: '', categoryId: '', purchasePrice: '', salePrice: '',
@@ -19,6 +21,7 @@ export default function Products() {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
 
   const load = useCallback(async () => {
     const { data } = await api.get('/products', { params: { search, pageSize: 100 } });
@@ -182,7 +185,12 @@ export default function Products() {
       <Modal title={editingId ? 'Editar producto' : 'Nuevo producto'} open={modalOpen} onClose={() => setModalOpen(false)} maxWidth="max-w-2xl">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Código de barras *" full>
-            <input className="input" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} required autoFocus />
+            <div className="flex gap-2">
+              <input className="input" value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} required autoFocus />
+              <button type="button" onClick={() => setScannerOpen(true)} className="btn-secondary shrink-0" title="Escanear con la cámara">
+                <Camera size={18} /> Escanear
+              </button>
+            </div>
           </Field>
           <Field label="Nombre *" full>
             <input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
@@ -228,6 +236,20 @@ export default function Products() {
           </div>
         </form>
       </Modal>
+
+      {/* Escáner: llena el código de barras (lectura única). */}
+      {scannerOpen && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            open
+            onDetected={(c) => {
+              setForm((f) => ({ ...f, barcode: String(c).trim() }));
+              setScannerOpen(false);
+            }}
+            onClose={() => setScannerOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

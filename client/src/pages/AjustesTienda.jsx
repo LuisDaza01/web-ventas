@@ -20,20 +20,23 @@ export default function AjustesTienda() {
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
-  async function subirLogo(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const data = new FormData();
-      data.append('image', file);
-      const { data: r } = await api.post('/catalog/upload', data);
-      setForm((f) => ({ ...f, logoUrl: r.url }));
-    } catch (err) {
-      setMsg({ type: 'error', text: errorMsg(err) });
-    } finally {
-      setUploading(false);
-    }
+  // Sube una imagen y guarda su URL en el campo indicado (logoUrl o qrPagoUrl).
+  function subirImagen(campo) {
+    return async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+      try {
+        const data = new FormData();
+        data.append('image', file);
+        const { data: r } = await api.post('/catalog/upload', data);
+        setForm((f) => ({ ...f, [campo]: r.url }));
+      } catch (err) {
+        setMsg({ type: 'error', text: errorMsg(err) });
+      } finally {
+        setUploading(false);
+      }
+    };
   }
 
   async function guardar(e) {
@@ -50,6 +53,7 @@ export default function AjustesTienda() {
         telefono: form.telefono || null,
         mensajeRecibo: form.mensajeRecibo || null,
         logoUrl: form.logoUrl || null,
+        qrPagoUrl: form.qrPagoUrl || null,
       });
       setForm(data);
       setTienda(data); // aplica moneda/recibo de inmediato en toda la app
@@ -113,14 +117,27 @@ export default function AjustesTienda() {
           <input className="input" value={form.mensajeRecibo || ''} onChange={set('mensajeRecibo')} placeholder="¡Gracias por su compra!" />
         </div>
 
-        <div>
-          <label className="label">Logo</label>
-          <div className="flex items-center gap-3">
-            {form.logoUrl && <img src={form.logoUrl} alt="logo" className="h-12 object-contain rounded border border-slate-200" />}
-            <label className="btn-secondary cursor-pointer">
-              <Upload size={16} /> {uploading ? 'Subiendo...' : 'Subir logo'}
-              <input type="file" accept="image/*" className="hidden" onChange={subirLogo} disabled={uploading} />
-            </label>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label">Logo</label>
+            <div className="flex items-center gap-3">
+              {form.logoUrl && <img src={form.logoUrl} alt="logo" className="h-12 object-contain rounded border border-slate-200" />}
+              <label className="btn-secondary cursor-pointer">
+                <Upload size={16} /> {uploading ? 'Subiendo...' : 'Subir logo'}
+                <input type="file" accept="image/*" className="hidden" onChange={subirImagen('logoUrl')} disabled={uploading} />
+              </label>
+            </div>
+          </div>
+          <div>
+            <label className="label">QR de cobro</label>
+            <div className="flex items-center gap-3">
+              {form.qrPagoUrl && <img src={form.qrPagoUrl} alt="QR" className="h-12 object-contain rounded border border-slate-200" />}
+              <label className="btn-secondary cursor-pointer">
+                <Upload size={16} /> {uploading ? 'Subiendo...' : 'Subir QR'}
+                <input type="file" accept="image/*" className="hidden" onChange={subirImagen('qrPagoUrl')} disabled={uploading} />
+              </label>
+            </div>
+            <p className="text-xs text-slate-400 mt-1">El cliente lo escanea para pagar (QR Simple, banco, etc.).</p>
           </div>
         </div>
 

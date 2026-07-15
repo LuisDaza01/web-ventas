@@ -25,6 +25,9 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'Plan') THEN
     CREATE TYPE "Plan" AS ENUM ('FREE', 'BASIC', 'PRO');
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'MetodoPago') THEN
+    CREATE TYPE "MetodoPago" AS ENUM ('EFECTIVO', 'QR');
+  END IF;
 END $$;
 
 BEGIN;
@@ -55,6 +58,10 @@ ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "direccion"     TEXT;
 ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "telefono"      TEXT;
 ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "mensajeRecibo" TEXT;
 ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "logoUrl"       TEXT;
+ALTER TABLE "Tienda" ADD COLUMN IF NOT EXISTS "qrPagoUrl"     TEXT;
+
+-- Método de pago en las ventas (efectivo por defecto).
+ALTER TABLE "Sale" ADD COLUMN IF NOT EXISTS "metodoPago" "MetodoPago" NOT NULL DEFAULT 'EFECTIVO';
 
 -- 2) Crear la Tienda #1 (recibe todos los datos actuales) -----------------
 INSERT INTO "Tienda" ("id", "nombre", "slug")

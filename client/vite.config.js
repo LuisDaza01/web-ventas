@@ -7,6 +7,9 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    // Permite servir a través de túneles (cloudflared/ngrok) para probar en el
+    // celular por HTTPS. `true` acepta cualquier host (solo dev).
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:4000',
       '/uploads': 'http://localhost:4000',
