@@ -132,7 +132,7 @@ export default function Catalogo() {
 
       {/* Barra de cobro (aparece cuando hay items en el carrito) */}
       {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 lg:left-64 p-3 bg-paper/90 backdrop-blur border-t border-line z-20">
+        <div className="fixed bottom-0 left-0 right-0 lg:left-64 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-paper/90 backdrop-blur border-t border-line z-20">
           <button onClick={() => navigate('/pos')} className="btn-primary w-full py-3.5">
             <ShoppingCart size={18} strokeWidth={1.5} /> Cobrar {totalItems} artículo(s) · {money(total)}
           </button>

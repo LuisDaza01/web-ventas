@@ -56,7 +56,7 @@ export default function Users() {
         <button onClick={() => setOpen(true)} className="btn-primary"><Plus size={16} strokeWidth={1.5} /> Nuevo usuario</button>
       </div>
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left border-b border-line">
             <tr className="micro">

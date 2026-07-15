@@ -140,20 +140,24 @@ export default function POS() {
           <h1 className="display text-3xl leading-tight">Punto de venta</h1>
         </div>
 
-        <form onSubmit={handleScan} className="card p-4 flex items-center gap-3">
-          <ScanBarcode className="text-ink shrink-0" size={26} strokeWidth={1.25} />
-          <input
-            ref={inputRef}
-            className="input text-base"
-            placeholder="Escanea o escribe el código de barras y presiona Enter"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-          />
-          <button type="submit" className="btn-primary shrink-0">Agregar</button>
+        {/* En móvil el buscador ocupa toda la fila y los botones bajan a una
+            segunda fila a mitades, cómodos para el pulgar. */}
+        <form onSubmit={handleScan} className="card p-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3 w-full sm:flex-1 sm:w-auto">
+            <ScanBarcode className="text-ink shrink-0" size={26} strokeWidth={1.25} />
+            <input
+              ref={inputRef}
+              className="input text-base"
+              placeholder="Escanea o escribe el código…"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </div>
+          <button type="submit" className="btn-primary flex-1 sm:flex-none">Agregar</button>
           <button
             type="button"
             onClick={() => setScannerOpen(true)}
-            className="btn-secondary shrink-0"
+            className="btn-secondary flex-1 sm:flex-none"
             title="Escanear con la cámara del dispositivo"
           >
             <Camera size={16} strokeWidth={1.5} /> Cámara
@@ -166,8 +170,8 @@ export default function POS() {
           </div>
         )}
 
-        <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="card overflow-x-auto">
+          <table className="w-full text-sm min-w-[480px]">
             <thead className="text-left border-b border-line">
               <tr className="micro">
                 <th className="px-5 py-3 font-medium">Producto</th>
@@ -184,9 +188,9 @@ export default function POS() {
                   <td className="px-5 py-3 text-right text-gris">{money(i.salePrice)}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => changeQty(i.id, -1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Minus size={13} strokeWidth={1.5} /></button>
+                      <button onClick={() => changeQty(i.id, -1)} className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Minus size={13} strokeWidth={1.5} /></button>
                       <span className="w-8 text-center font-medium text-ink">{i.qty}</span>
-                      <button onClick={() => changeQty(i.id, 1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Plus size={13} strokeWidth={1.5} /></button>
+                      <button onClick={() => changeQty(i.id, 1)} className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Plus size={13} strokeWidth={1.5} /></button>
                     </div>
                   </td>
                   <td className="px-5 py-3 text-right font-display font-medium text-ink">{money(i.salePrice * i.qty)}</td>

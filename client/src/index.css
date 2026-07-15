@@ -34,7 +34,9 @@
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-display font-bold transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
+    /* En móvil, área táctil mínima de 44px; en escritorio pueden ser compactos. */
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 min-h-[44px] sm:min-h-0 text-sm font-display font-bold transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
+    touch-action: manipulation;
   }
   /* Primario: esmeralda sólido, la acción principal de cada pantalla. */
   .btn-primary {
@@ -49,9 +51,10 @@
     @apply btn bg-accentSoft text-accent border border-accent/20 hover:bg-accent hover:text-white;
   }
 
-  /* Inputs en caja redondeada, foco esmeralda bien visible. */
+  /* Inputs en caja redondeada, foco esmeralda bien visible.
+     16px en móvil: con menos, iOS hace zoom automático al enfocar. */
   .input {
-    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-gris/50 focus:border-brand focus:ring-4 focus:ring-brand/15;
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-base sm:text-sm text-ink outline-none transition placeholder:text-gris/50 focus:border-brand focus:ring-4 focus:ring-brand/15;
   }
   select.input {
     @apply cursor-pointer;

@@ -85,7 +85,7 @@ export default function Landing() {
     : { to: '/login' };
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-dvh bg-paper">
       {/* Barra superior */}
       <header className="border-b border-line bg-paper/90 backdrop-blur sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">

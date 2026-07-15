@@ -208,16 +208,16 @@ export default function Reports() {
             </button>
           ))}
         </div>
-        <div className="flex flex-wrap items-end gap-5">
-          <div>
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-[140px]">
             <label className="label">Desde</label>
             <input type="date" className="input" value={from} onChange={(e) => setFromManual(e.target.value)} />
           </div>
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="label">Hasta</label>
             <input type="date" className="input" value={to} onChange={(e) => setToManual(e.target.value)} />
           </div>
-          <div>
+          <div className="flex-1 min-w-[140px]">
             <label className="label">Elegir mes</label>
             <input type="month" className="input" value={monthValue} onChange={(e) => applyMonth(e.target.value)} />
           </div>

@@ -100,7 +100,7 @@ export default function TiendaPublica() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-paper p-6">
+      <div className="min-h-dvh flex items-center justify-center bg-paper p-6">
         <div className="card p-10 text-center max-w-md">
           <p className="display text-2xl mb-2">Catálogo no disponible</p>
           <p className="text-sm text-gris">
@@ -112,14 +112,14 @@ export default function TiendaPublica() {
   }
   if (!tienda) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-paper text-gris">
+      <div className="min-h-dvh flex items-center justify-center bg-paper text-gris">
         Cargando…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-paper pb-28">
+    <div className="min-h-dvh bg-paper pb-28">
       {/* Cabecera de la tienda */}
       <header className="border-b border-line bg-white">
         <div className="max-w-5xl mx-auto px-4 py-6 flex items-center gap-4">
@@ -227,7 +227,7 @@ export default function TiendaPublica() {
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => cambiarQty(p.id, -1)}
-                          className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
+                          className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
                         >
                           <Minus size={13} strokeWidth={1.5} />
                         </button>
@@ -236,7 +236,7 @@ export default function TiendaPublica() {
                         </span>
                         <button
                           onClick={() => cambiarQty(p.id, 1)}
-                          className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
+                          className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
                         >
                           <Plus size={13} strokeWidth={1.5} />
                         </button>
@@ -256,7 +256,7 @@ export default function TiendaPublica() {
 
       {/* Barra del pedido */}
       {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-3 bg-paper/95 backdrop-blur border-t border-line z-20">
+        <div className="fixed bottom-0 left-0 right-0 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-paper/95 backdrop-blur border-t border-line z-20">
           <div className="max-w-5xl mx-auto flex gap-2">
             <button
               onClick={() => setCarritoAbierto(true)}
@@ -291,14 +291,14 @@ export default function TiendaPublica() {
                 <X size={20} strokeWidth={1.5} />
               </button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] sm:pb-5 space-y-3">
               {cart.map((i) => (
                 <div key={i.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-ink flex-1 min-w-0 truncate">{i.name}</span>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => cambiarQty(i.id, -1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Minus size={12} strokeWidth={1.5} /></button>
+                    <button onClick={() => cambiarQty(i.id, -1)} className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Minus size={12} strokeWidth={1.5} /></button>
                     <span className="w-6 text-center font-medium text-ink">{i.qty}</span>
-                    <button onClick={() => cambiarQty(i.id, 1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Plus size={12} strokeWidth={1.5} /></button>
+                    <button onClick={() => cambiarQty(i.id, 1)} className="p-2 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Plus size={12} strokeWidth={1.5} /></button>
                   </div>
                   <span className="font-display font-medium text-ink w-20 text-right">
                     {money(i.salePrice * i.qty)}
