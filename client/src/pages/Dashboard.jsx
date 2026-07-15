@@ -52,7 +52,7 @@ export default function Dashboard() {
           <Link
             key={to}
             to={to}
-            className="card p-5 flex items-center gap-4 group hover:border-ink transition-colors"
+            className="card p-5 flex items-center gap-4 group hover:border-brand hover:shadow-lift transition"
           >
             <Icon size={22} strokeWidth={1.25} className="text-ink" />
             <span className="font-display font-medium text-ink">{label}</span>

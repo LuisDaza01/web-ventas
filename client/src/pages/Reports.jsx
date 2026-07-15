@@ -200,8 +200,8 @@ export default function Reports() {
               onClick={() => applyPreset(p.key)}
               className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${
                 preset === p.key
-                  ? 'bg-ink text-white border-ink'
-                  : 'border-line text-gris hover:border-ink hover:text-ink'
+                  ? 'bg-brand text-white border-brand'
+                  : 'border-line text-gris hover:border-brand hover:text-brand'
               }`}
             >
               {p.label}
@@ -258,13 +258,13 @@ export default function Reports() {
           <div className="flex gap-1">
             <button
               onClick={() => setMetric('ganancia')}
-              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ganancia' ? 'bg-ink text-white border-ink' : 'border-line text-gris hover:border-ink hover:text-ink'}`}
+              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ganancia' ? 'bg-brand text-white border-brand' : 'border-line text-gris hover:border-brand hover:text-brand'}`}
             >
               Ganancia
             </button>
             <button
               onClick={() => setMetric('ventas')}
-              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ventas' ? 'bg-ink text-white border-ink' : 'border-line text-gris hover:border-ink hover:text-ink'}`}
+              className={`rounded-md px-3 py-1.5 text-[11px] font-semibold uppercase tracking-micro border transition ${metric === 'ventas' ? 'bg-brand text-white border-brand' : 'border-line text-gris hover:border-brand hover:text-brand'}`}
             >
               Ventas
             </button>
@@ -351,7 +351,7 @@ function CompareCard({ data }) {
   const baja = diff < 0;
   const Icon = sube ? ArrowUp : baja ? ArrowDown : Minus;
   // Solo la caída (pérdida) usa el acento; lo demás queda en tinta/gris.
-  const color = sube ? 'text-ink border-ink' : baja ? 'text-accent border-accent' : 'text-gris border-line';
+  const color = sube ? 'text-brandDark border-brand bg-brandSoft' : baja ? 'text-accent border-accent bg-accentSoft' : 'text-gris border-line';
 
   return (
     <div className="card p-6">
@@ -386,7 +386,7 @@ function BarChart({ data, metric }) {
             title={`${d.day}: ${money(d[metric])}`}
           >
             <div
-              className="w-full bg-ink hover:bg-ink/70 transition-colors"
+              className="w-full rounded-t-md bg-brand hover:bg-brandDark transition-colors"
               style={{ height: `${max > 0 ? (d[metric] / max) * 100 : 0}%` }}
             />
           </div>

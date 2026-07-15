@@ -7,88 +7,97 @@
     @apply bg-paper text-ink antialiased font-sans;
   }
 
-  /* Checkboxes editoriales: cuadrado negro con check blanco. */
+  /* Checkboxes: cuadrado redondeado esmeralda con check blanco. */
   input[type='checkbox'] {
-    @apply h-4 w-4 shrink-0 appearance-none rounded-none border border-ink bg-transparent cursor-pointer;
+    @apply h-[18px] w-[18px] shrink-0 appearance-none rounded-md border-2 border-line bg-white cursor-pointer transition-colors;
   }
   input[type='checkbox']:checked {
-    @apply bg-ink;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='square'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+    @apply bg-brand border-brand;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
     background-size: 100% 100%;
   }
 }
 
 @layer components {
-  /* ——— Sistema editorial minimalista ——— */
+  /* ——— Sistema "comercio cálido" ———
+     Redondeado, con color y jerarquía clara. Verde = acción/ok,
+     ámbar = atención, rojo = peligro/deuda, azul = informativo. */
 
-  /* Titulares y montos en serif display. */
+  /* Titulares y montos: Nunito en negrita, cercano y legible. */
   .display {
-    @apply font-display font-medium tracking-tight text-ink;
+    @apply font-display font-extrabold tracking-tight text-ink;
   }
 
-  /* Micro-label: MAYÚSCULAS, tracking amplio, gris. */
+  /* Micro-label: etiqueta pequeña de sección. */
   .micro {
-    @apply text-[11px] font-medium uppercase tracking-micro text-gris;
+    @apply text-[11px] font-bold uppercase tracking-micro text-gris;
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-md px-5 py-2.5 text-xs font-semibold uppercase tracking-micro transition disabled:opacity-40 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-display font-bold transition active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed;
   }
-  /* Primario: rectángulo negro, texto blanco. */
+  /* Primario: esmeralda sólido, la acción principal de cada pantalla. */
   .btn-primary {
-    @apply btn bg-ink text-white hover:bg-ink/85;
+    @apply btn bg-brand text-white shadow-soft hover:bg-brandDark;
   }
-  /* Secundario: contorno negro fino, fondo transparente. */
+  /* Secundario: blanco con borde, se colorea al pasar. */
   .btn-secondary {
-    @apply btn bg-transparent text-ink border border-ink hover:bg-ink hover:text-white;
+    @apply btn bg-white text-ink border border-line shadow-soft hover:border-brand hover:text-brand;
   }
-  /* Peligro: mismo contorno, en el único acento (terracota). */
+  /* Peligro: rojo suave, para acciones destructivas. */
   .btn-danger {
-    @apply btn bg-transparent text-accent border border-accent hover:bg-accent hover:text-white;
+    @apply btn bg-accentSoft text-accent border border-accent/20 hover:bg-accent hover:text-white;
   }
 
-  /* Inputs con línea inferior fina (underline), sin caja. */
+  /* Inputs en caja redondeada, foco esmeralda bien visible. */
   .input {
-    @apply w-full rounded-none border-0 border-b border-line bg-transparent px-0 py-2 text-sm text-ink outline-none transition-colors placeholder:text-gris/50 focus:border-ink;
+    @apply w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm text-ink outline-none transition placeholder:text-gris/50 focus:border-brand focus:ring-4 focus:ring-brand/15;
   }
   select.input {
     @apply cursor-pointer;
   }
 
   .label {
-    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-micro text-gris;
+    @apply mb-1.5 block text-[11px] font-bold uppercase tracking-micro text-gris;
   }
 
-  /* Card: blanco papel, borde fino, sin sombra pesada. */
+  /* Card: blanca, muy redondeada, sombra suave. */
   .card {
-    @apply rounded-md border border-line bg-white;
+    @apply rounded-2xl border border-line bg-white shadow-soft;
   }
 
-  /* Badges: texto en micro-caps con borde fino, sin fondos de color. */
+  /* Badges: pastillas con fondo de color suave.
+     badge-ink = positivo/activo (verde) · badge-accent = alerta (rojo). */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-sm border border-line px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-gris;
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-paper border border-line text-gris;
   }
   .badge-ink {
-    @apply border-ink text-ink;
+    @apply border-transparent bg-brandSoft text-brandDark;
   }
   .badge-accent {
-    @apply border-accent text-accent;
+    @apply border-transparent bg-accentSoft text-accent;
+  }
+  .badge-amber {
+    @apply border-transparent bg-amberSoft text-amber;
+  }
+  .badge-info {
+    @apply border-transparent bg-infoSoft text-info;
   }
 
-  /* Notas / mensajes de estado: línea lateral, nada de fondos de color. */
+  /* Notas / mensajes de estado con fondo de color suave. */
   .note {
-    @apply rounded-md border border-line bg-white px-3 py-2 text-sm;
+    @apply rounded-xl px-4 py-3 text-sm font-medium;
   }
   .note-error {
-    @apply note border-l-2 border-l-accent text-accent;
+    @apply note bg-accentSoft text-accent;
   }
   .note-ok {
-    @apply note border-l-2 border-l-ink text-ink;
+    @apply note bg-brandSoft text-brandDark;
   }
 
-  /* Trama de puntos (halftone) para zonas vacías. */
+  /* Trama de puntos cálida para zonas vacías. */
   .halftone {
-    background-image: radial-gradient(#d9d9d4 1px, transparent 1px);
+    background-image: radial-gradient(#E3D9CB 1px, transparent 1px);
     background-size: 14px 14px;
   }
 }

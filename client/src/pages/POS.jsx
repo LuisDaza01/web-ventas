@@ -183,9 +183,9 @@ export default function POS() {
                   <td className="px-5 py-3 text-right text-gris">{money(i.salePrice)}</td>
                   <td className="px-5 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => changeQty(i.id, -1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink transition-colors"><Minus size={13} strokeWidth={1.5} /></button>
+                      <button onClick={() => changeQty(i.id, -1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Minus size={13} strokeWidth={1.5} /></button>
                       <span className="w-8 text-center font-medium text-ink">{i.qty}</span>
-                      <button onClick={() => changeQty(i.id, 1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink transition-colors"><Plus size={13} strokeWidth={1.5} /></button>
+                      <button onClick={() => changeQty(i.id, 1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand transition-colors"><Plus size={13} strokeWidth={1.5} /></button>
                     </div>
                   </td>
                   <td className="px-5 py-3 text-right font-display font-medium text-ink">{money(i.salePrice * i.qty)}</td>
@@ -223,21 +223,21 @@ export default function POS() {
             <button
               type="button"
               onClick={() => setMetodoPago('EFECTIVO')}
-              className={`!px-2 ${metodoPago === 'EFECTIVO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
+              className={`!px-2 ${metodoPago === 'EFECTIVO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-white hover:!border-brand hover:!text-brand'}`}
             >
               <Banknote size={15} strokeWidth={1.5} /> Efectivo
             </button>
             <button
               type="button"
               onClick={() => setMetodoPago('QR')}
-              className={`!px-2 ${metodoPago === 'QR' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
+              className={`!px-2 ${metodoPago === 'QR' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-white hover:!border-brand hover:!text-brand'}`}
             >
               <QrCode size={15} strokeWidth={1.5} /> QR
             </button>
             <button
               type="button"
               onClick={() => setMetodoPago('CREDITO')}
-              className={`!px-2 ${metodoPago === 'CREDITO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
+              className={`!px-2 ${metodoPago === 'CREDITO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-white hover:!border-brand hover:!text-brand'}`}
             >
               <NotebookPen size={15} strokeWidth={1.5} /> Fiado
             </button>

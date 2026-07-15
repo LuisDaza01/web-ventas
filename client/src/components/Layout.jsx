@@ -71,10 +71,10 @@ export default function Layout({ children }) {
         }`}
       >
         <div className="relative h-20 flex items-end px-6 pb-4 border-b border-line overflow-hidden">
-          {/* Forma orgánica de tinta anclada a la esquina */}
+          {/* Forma orgánica de color anclada a la esquina */}
           <div
             aria-hidden
-            className="absolute -top-8 -right-8 w-24 h-24 bg-ink"
+            className="absolute -top-8 -right-8 w-24 h-24 bg-brand"
             style={{ borderRadius: '58% 42% 63% 37% / 55% 48% 52% 45%' }}
           />
           <div className="relative">
@@ -92,16 +92,16 @@ export default function Layout({ children }) {
               end={to === '/' || to === '/plataforma'}
               onClick={() => setOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition border-l-2 ${
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition ${
                   isActive
-                    ? 'border-ink text-ink font-semibold bg-white'
-                    : 'border-transparent text-gris hover:text-ink'
+                    ? 'bg-brandSoft text-brandDark font-bold'
+                    : 'text-gris hover:bg-paper hover:text-ink'
                 }`
               }
             >
               <Icon size={17} strokeWidth={1.5} /> {label}
               {to === '/pos' && totalItems > 0 && (
-                <span className="ml-auto bg-ink text-white text-[10px] font-semibold rounded-sm px-1.5 py-0.5">
+                <span className="ml-auto bg-brand text-white text-[10px] font-bold rounded-full px-2 py-0.5">
                   {totalItems}
                 </span>
               )}

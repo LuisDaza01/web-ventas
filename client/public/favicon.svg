@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <!-- Forma orgánica de tinta (misma identidad editorial de la app) -->
-  <path fill="#0A0A0A" d="M32 2c17 0 30 11 30 29S49 62 31 62 2 50 2 31 15 2 32 2z"/>
-  <text x="32" y="44" text-anchor="middle" font-family="Georgia, serif" font-weight="600" font-size="34" fill="#FAFAF8">W</text>
+  <path fill="#059669" d="M32 2c17 0 30 11 30 29S49 62 31 62 2 50 2 31 15 2 32 2z"/>
+  <text x="32" y="44" text-anchor="middle" font-family="Arial, sans-serif" font-weight="800" font-size="32" fill="#FFFFFF">W</text>
 </svg>
