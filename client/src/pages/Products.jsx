@@ -44,6 +44,7 @@ export default function Products() {
     setForm(EMPTY);
     setEditingId(null);
     setError('');
+    setQuick(null);
     setModalOpen(true);
   }
 
@@ -56,33 +57,46 @@ export default function Products() {
     });
     setEditingId(p.id);
     setError('');
+    setQuick(null);
     setModalOpen(true);
   }
 
-  // Crea una categoría al vuelo y la deja seleccionada.
-  async function crearCategoria() {
-    const name = window.prompt('Nombre de la nueva categoría:');
-    if (!name || !name.trim()) return;
+  // Alta rápida de categoría/proveedor SIN prompt del navegador: un mini-form
+  // integrado que aparece bajo el select. quick = { tipo, nombre } | null.
+  const [quick, setQuick] = useState(null);
+  const [quickSaving, setQuickSaving] = useState(false);
+
+  async function guardarQuick() {
+    const nombre = quick?.nombre?.trim();
+    if (!nombre) return;
+    setQuickSaving(true);
+    setError('');
     try {
-      const { data } = await api.post('/catalog/categories', { name: name.trim() });
-      setCategories((cs) => [...cs, data].sort((a, b) => a.name.localeCompare(b.name)));
-      setForm((f) => ({ ...f, categoryId: data.id }));
+      if (quick.tipo === 'categoria') {
+        const { data } = await api.post('/catalog/categories', { name: nombre });
+        setCategories((cs) => [...cs, data].sort((a, b) => a.name.localeCompare(b.name)));
+        setForm((f) => ({ ...f, categoryId: data.id }));
+      } else {
+        const { data } = await api.post('/catalog/suppliers', { name: nombre });
+        setSuppliers((ss) => [...ss, data].sort((a, b) => a.name.localeCompare(b.name)));
+        setForm((f) => ({ ...f, supplierId: data.id }));
+      }
+      setQuick(null);
     } catch (err) {
       setError(errorMsg(err));
+    } finally {
+      setQuickSaving(false);
     }
   }
 
-  // Crea un proveedor (solo nombre) al vuelo y lo deja seleccionado.
-  async function crearProveedor() {
-    const name = window.prompt('Nombre del nuevo proveedor:');
-    if (!name || !name.trim()) return;
-    try {
-      const { data } = await api.post('/catalog/suppliers', { name: name.trim() });
-      setSuppliers((ss) => [...ss, data].sort((a, b) => a.name.localeCompare(b.name)));
-      setForm((f) => ({ ...f, supplierId: data.id }));
-    } catch (err) {
-      setError(errorMsg(err));
+  // El alta rápida vive dentro del <form> del producto: interceptamos Enter
+  // para que guarde la categoría/proveedor y no envíe el producto entero.
+  function quickKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      guardarQuick();
     }
+    if (e.key === 'Escape') setQuick(null);
   }
 
   async function handleImage(e) {
@@ -233,10 +247,26 @@ export default function Products() {
                 <option value="">— Sin categoría —</option>
                 {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-              <button type="button" onClick={crearCategoria} className="btn-secondary shrink-0" title="Nueva categoría">
+              <button
+                type="button"
+                onClick={() => setQuick({ tipo: 'categoria', nombre: '' })}
+                className="btn-secondary shrink-0"
+                title="Nueva categoría"
+              >
                 <Plus size={14} strokeWidth={1.5} />
               </button>
             </div>
+            {quick?.tipo === 'categoria' && (
+              <QuickCreate
+                placeholder="Nombre de la categoría (ej. Bebidas)"
+                value={quick.nombre}
+                onChange={(nombre) => setQuick((q) => ({ ...q, nombre }))}
+                onKeyDown={quickKeyDown}
+                onSave={guardarQuick}
+                onCancel={() => setQuick(null)}
+                saving={quickSaving}
+              />
+            )}
           </Field>
           <Field label="Proveedor (opcional)">
             <div className="flex gap-2">
@@ -244,10 +274,26 @@ export default function Products() {
                 <option value="">— Ninguno —</option>
                 {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
-              <button type="button" onClick={crearProveedor} className="btn-secondary shrink-0" title="Nuevo proveedor">
+              <button
+                type="button"
+                onClick={() => setQuick({ tipo: 'proveedor', nombre: '' })}
+                className="btn-secondary shrink-0"
+                title="Nuevo proveedor"
+              >
                 <Plus size={14} strokeWidth={1.5} />
               </button>
             </div>
+            {quick?.tipo === 'proveedor' && (
+              <QuickCreate
+                placeholder="Nombre del proveedor (ej. Distribuidora Sur)"
+                value={quick.nombre}
+                onChange={(nombre) => setQuick((q) => ({ ...q, nombre }))}
+                onKeyDown={quickKeyDown}
+                onSave={guardarQuick}
+                onCancel={() => setQuick(null)}
+                saving={quickSaving}
+              />
+            )}
           </Field>
           <Field label="Precio de compra">
             <input type="number" step="0.01" min="0" className="input" value={form.purchasePrice} onChange={(e) => setForm({ ...form, purchasePrice: e.target.value })} />
@@ -292,6 +338,36 @@ export default function Products() {
           />
         </Suspense>
       )}
+    </div>
+  );
+}
+
+// Mini-formulario de alta rápida (categoría/proveedor) que aparece bajo el
+// select, en lugar del prompt nativo del navegador.
+function QuickCreate({ placeholder, value, onChange, onKeyDown, onSave, onCancel, saving }) {
+  return (
+    <div className="mt-2 p-3 rounded-xl bg-brandSoft/50 border border-brand/20 space-y-2">
+      <input
+        className="input"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        autoFocus
+      />
+      <div className="flex gap-2 justify-end">
+        <button type="button" onClick={onCancel} className="btn-secondary !py-1.5 !px-3 !text-xs">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={saving || !value.trim()}
+          className="btn-primary !py-1.5 !px-3 !text-xs"
+        >
+          {saving ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
     </div>
   );
 }
