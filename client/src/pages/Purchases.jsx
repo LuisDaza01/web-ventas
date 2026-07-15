@@ -125,7 +125,7 @@ export default function Purchases() {
         </div>
       )}
 
-      <div className="card overflow-hidden">
+      <div className="card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left border-b border-line">
             <tr className="micro">

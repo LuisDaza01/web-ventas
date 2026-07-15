@@ -63,7 +63,7 @@ export default function Layout({ children }) {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-dvh flex">
       {/* Barra lateral */}
       <aside
         className={`fixed lg:static z-30 inset-y-0 left-0 w-64 bg-paper border-r border-line flex flex-col transform transition-transform ${

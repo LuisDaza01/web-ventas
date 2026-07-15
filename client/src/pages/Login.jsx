@@ -28,7 +28,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-paper halftone flex items-center justify-center p-4">
+    <div className="min-h-dvh bg-paper halftone flex items-center justify-center p-4">
       <div className="relative w-full max-w-md bg-white border border-line rounded-2xl shadow-lift overflow-hidden">
         {/* Blob de color anclado a la esquina superior derecha */}
         <div
