@@ -130,7 +130,7 @@ export default function TiendaPublica() {
               className="h-14 w-14 object-contain rounded-sm border border-line bg-white"
             />
           ) : (
-            <div className="h-14 w-14 rounded-sm bg-ink flex items-center justify-center text-white font-display text-xl">
+            <div className="h-14 w-14 rounded-2xl bg-brand flex items-center justify-center text-white font-display font-extrabold text-2xl">
               {tienda.nombre.charAt(0)}
             </div>
           )}
@@ -175,7 +175,7 @@ export default function TiendaPublica() {
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => setCategoria(null)}
-              className={`badge cursor-pointer transition-colors ${!categoria ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+              className={`badge cursor-pointer transition-colors ${!categoria ? '!bg-brand !text-white !border-transparent' : 'bg-white hover:border-brand hover:text-brand'}`}
             >
               Todo
             </button>
@@ -183,7 +183,7 @@ export default function TiendaPublica() {
               <button
                 key={c.id}
                 onClick={() => setCategoria(c.id === categoria ? null : c.id)}
-                className={`badge cursor-pointer transition-colors ${categoria === c.id ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+                className={`badge cursor-pointer transition-colors ${categoria === c.id ? '!bg-brand !text-white !border-transparent' : 'bg-white hover:border-brand hover:text-brand'}`}
               >
                 {c.name}
               </button>
@@ -227,7 +227,7 @@ export default function TiendaPublica() {
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => cambiarQty(p.id, -1)}
-                          className="p-1 border border-line rounded-sm text-ink hover:border-ink"
+                          className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
                         >
                           <Minus size={13} strokeWidth={1.5} />
                         </button>
@@ -236,7 +236,7 @@ export default function TiendaPublica() {
                         </span>
                         <button
                           onClick={() => cambiarQty(p.id, 1)}
-                          className="p-1 border border-line rounded-sm text-ink hover:border-ink"
+                          className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"
                         >
                           <Plus size={13} strokeWidth={1.5} />
                         </button>
@@ -296,9 +296,9 @@ export default function TiendaPublica() {
                 <div key={i.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-ink flex-1 min-w-0 truncate">{i.name}</span>
                   <div className="flex items-center gap-1.5">
-                    <button onClick={() => cambiarQty(i.id, -1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink"><Minus size={12} strokeWidth={1.5} /></button>
+                    <button onClick={() => cambiarQty(i.id, -1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Minus size={12} strokeWidth={1.5} /></button>
                     <span className="w-6 text-center font-medium text-ink">{i.qty}</span>
-                    <button onClick={() => cambiarQty(i.id, 1)} className="p-1 border border-line rounded-sm text-ink hover:border-ink"><Plus size={12} strokeWidth={1.5} /></button>
+                    <button onClick={() => cambiarQty(i.id, 1)} className="p-1 border border-line rounded-lg text-ink hover:border-brand hover:text-brand"><Plus size={12} strokeWidth={1.5} /></button>
                   </div>
                   <span className="font-display font-medium text-ink w-20 text-right">
                     {money(i.salePrice * i.qty)}

@@ -29,11 +29,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-paper halftone flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md bg-paper border border-line rounded-md overflow-hidden">
-        {/* Blob de tinta anclado a la esquina superior derecha */}
+      <div className="relative w-full max-w-md bg-white border border-line rounded-2xl shadow-lift overflow-hidden">
+        {/* Blob de color anclado a la esquina superior derecha */}
         <div
           aria-hidden
-          className="absolute -top-14 -right-14 w-40 h-40 bg-ink"
+          className="absolute -top-14 -right-14 w-40 h-40 bg-brand"
           style={{ borderRadius: '62% 38% 55% 45% / 55% 60% 40% 45%' }}
         />
 

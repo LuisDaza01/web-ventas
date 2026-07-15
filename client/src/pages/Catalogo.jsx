@@ -75,7 +75,7 @@ export default function Catalogo() {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setCategoria(null)}
-            className={`badge cursor-pointer transition-colors ${!categoria ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+            className={`badge cursor-pointer transition-colors ${!categoria ? '!bg-brand !text-white !border-transparent' : 'bg-white hover:border-brand hover:text-brand'}`}
           >
             Todo
           </button>
@@ -83,7 +83,7 @@ export default function Catalogo() {
             <button
               key={c.id}
               onClick={() => setCategoria(c.id === categoria ? null : c.id)}
-              className={`badge cursor-pointer transition-colors ${categoria === c.id ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+              className={`badge cursor-pointer transition-colors ${categoria === c.id ? '!bg-brand !text-white !border-transparent' : 'bg-white hover:border-brand hover:text-brand'}`}
             >
               {c.name}
             </button>
@@ -107,7 +107,7 @@ export default function Catalogo() {
                 key={p.id}
                 onClick={() => agregar(p)}
                 disabled={agotado}
-                className="card p-3 text-left flex flex-col hover:border-ink transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="card p-3 text-left flex flex-col hover:border-brand hover:shadow-lift transition disabled:opacity-40 disabled:cursor-not-allowed"
                 title={agotado ? 'Sin stock' : `Agregar ${p.name}`}
               >
                 <div className="aspect-square rounded-sm bg-paper halftone mb-3 overflow-hidden flex items-center justify-center">

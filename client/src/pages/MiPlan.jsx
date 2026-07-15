@@ -21,7 +21,7 @@ function UsoBar({ label, current, max }) {
       </div>
       <div className="h-1 bg-line overflow-hidden">
         <div
-          className={`h-full ${full ? 'bg-accent' : 'bg-ink'}`}
+          className={`h-full rounded-full ${full ? 'bg-accent' : 'bg-brand'}`}
           style={{ width: max == null ? '8%' : `${pct}%` }}
         />
       </div>
@@ -129,7 +129,7 @@ export default function MiPlan() {
           if (!p) return null;
           const actual = key === data.plan;
           return (
-            <div key={key} className={`card p-6 ${actual ? 'border-ink' : ''}`}>
+            <div key={key} className={`card p-6 ${actual ? 'border-brand ring-4 ring-brand/10' : ''}`}>
               <div className="flex items-center justify-between">
                 <h3 className="micro">{p.nombre}</h3>
                 {actual && <span className="badge badge-ink">Actual</span>}
@@ -140,13 +140,13 @@ export default function MiPlan() {
               </p>
               <ul className="mt-5 pt-4 border-t border-line space-y-2.5 text-sm text-gris">
                 <li className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-4 h-4 bg-ink text-white shrink-0">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand text-white shrink-0">
                     <Check size={11} strokeWidth={2.5} />
                   </span>
                   {p.maxProductos == null ? 'Productos ilimitados' : `Hasta ${p.maxProductos} productos`}
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-4 h-4 bg-ink text-white shrink-0">
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand text-white shrink-0">
                     <Check size={11} strokeWidth={2.5} />
                   </span>
                   {p.maxUsuarios == null ? 'Usuarios ilimitados' : `Hasta ${p.maxUsuarios} usuarios`}

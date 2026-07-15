@@ -107,12 +107,12 @@ export default function Landing() {
       <section className="max-w-6xl mx-auto px-4 pt-16 pb-20 text-center relative overflow-hidden">
         <div
           aria-hidden
-          className="absolute -top-16 -right-16 w-48 h-48 bg-ink opacity-[0.04]"
+          className="absolute -top-16 -right-16 w-48 h-48 bg-brand opacity-[0.08]"
           style={{ borderRadius: '58% 42% 63% 37% / 55% 48% 52% 45%' }}
         />
         <p className="micro mb-4">Inventario · Punto de venta · Catálogo</p>
         <h1 className="display text-4xl sm:text-6xl leading-tight max-w-3xl mx-auto">
-          Controla tu tienda desde el celular
+          Controla <span className="text-brand">tu tienda</span> desde el celular
         </h1>
         <p className="text-gris text-lg mt-5 max-w-xl mx-auto">
           Vende con escáner de código de barras, controla tu inventario, fía con registro y
@@ -139,7 +139,9 @@ export default function Landing() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-line border border-line">
             {FEATURES.map(({ icon: Icon, title, text }) => (
               <div key={title} className="bg-white p-7">
-                <Icon size={22} strokeWidth={1.25} className="text-ink mb-4" />
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-brandSoft text-brandDark mb-4">
+                  <Icon size={22} strokeWidth={1.75} />
+                </span>
                 <h3 className="font-display font-medium text-lg text-ink">{title}</h3>
                 <p className="text-sm text-gris mt-2 leading-relaxed">{text}</p>
               </div>
@@ -154,7 +156,7 @@ export default function Landing() {
         <h2 className="display text-3xl mb-10">Planes simples, en bolivianos</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {PLANES.map((p) => (
-            <div key={p.nombre} className={`card p-7 flex flex-col ${p.destacado ? 'border-ink' : ''}`}>
+            <div key={p.nombre} className={`card p-7 flex flex-col ${p.destacado ? 'border-brand ring-4 ring-brand/10' : ''}`}>
               <div className="flex items-center justify-between">
                 <h3 className="micro">{p.nombre}</h3>
                 {p.destacado && <span className="badge badge-ink">Popular</span>}
@@ -172,7 +174,7 @@ export default function Landing() {
               <ul className="mt-6 pt-5 border-t border-line space-y-2.5 text-sm text-gris flex-1">
                 {p.items.map((item) => (
                   <li key={item} className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center w-4 h-4 bg-ink text-white shrink-0">
+                    <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-brand text-white shrink-0">
                       <Check size={11} strokeWidth={2.5} />
                     </span>
                     {item}
@@ -193,7 +195,7 @@ export default function Landing() {
       </section>
 
       {/* CTA final */}
-      <section className="border-t border-line bg-ink text-white">
+      <section className="border-t border-line bg-brandDark text-white">
         <div className="max-w-6xl mx-auto px-4 py-16 text-center">
           <h2 className="font-display font-medium text-3xl tracking-tight">
             Empieza a vender mejor hoy
@@ -204,7 +206,7 @@ export default function Landing() {
           </p>
           <CtaTag
             {...ctaProps}
-            className="btn !bg-white !text-ink hover:!bg-white/85 mt-7 !py-3.5 !px-8 inline-flex"
+            className="btn !bg-white !text-brandDark hover:!bg-white/90 mt-7 !py-3.5 !px-8 inline-flex"
           >
             Crear mi tienda gratis <ArrowRight size={16} strokeWidth={1.5} />
           </CtaTag>
