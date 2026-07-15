@@ -1,7 +1,9 @@
-// Pantalla "Mi plan": plan actual de la tienda, uso vs. límites y comparativa.
-import { useEffect, useState } from 'react';
-import { Check } from 'lucide-react';
+// Pantalla "Mi plan": plan actual de la tienda, uso vs. límites, comparativa y
+// solicitud de cambio de plan con comprobante de pago.
+import { useEffect, useState, useCallback } from 'react';
+import { Check, Upload, Clock } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
+import Modal from '../components/Modal.jsx';
 
 const ORDER = ['FREE', 'BASIC', 'PRO'];
 
@@ -31,17 +33,68 @@ export default function MiPlan() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  // Solicitud de cambio de plan
+  const [pedido, setPedido] = useState(null); // plan elegido, abre el modal
+  const [comprobanteUrl, setComprobanteUrl] = useState('');
+  const [nota, setNota] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+
+  const load = useCallback(() => {
     api
       .get('/subscription')
       .then((r) => setData(r.data))
       .catch((e) => setError(errorMsg(e)));
   }, []);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  async function subirComprobante(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setFormError('');
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data: r } = await api.post('/catalog/upload', fd);
+      setComprobanteUrl(r.url);
+    } catch (err) {
+      setFormError(errorMsg(err));
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function enviarSolicitud(e) {
+    e.preventDefault();
+    setSaving(true);
+    setFormError('');
+    try {
+      await api.post('/subscription/solicitud', {
+        plan: pedido,
+        comprobanteUrl: comprobanteUrl || null,
+        nota: nota || null,
+      });
+      setPedido(null);
+      setComprobanteUrl('');
+      setNota('');
+      load();
+    } catch (err) {
+      setFormError(errorMsg(err));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (error) return <p className="note-error">{error}</p>;
   if (!data) return <p className="text-gris">Cargando...</p>;
 
   const planes = data.planes || {};
+  const pendiente = data.solicitud?.estado === 'PENDIENTE' ? data.solicitud : null;
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -99,14 +152,108 @@ export default function MiPlan() {
                   {p.maxUsuarios == null ? 'Usuarios ilimitados' : `Hasta ${p.maxUsuarios} usuarios`}
                 </li>
               </ul>
+              {!actual && (
+                <button
+                  onClick={() => setPedido(key)}
+                  disabled={!!pendiente}
+                  className="btn-secondary w-full mt-5"
+                >
+                  Solicitar este plan
+                </button>
+              )}
             </div>
           );
         })}
       </div>
 
-      <p className="note text-gris">
-        Para cambiar de plan, realiza el pago y contáctanos: activaremos tu nuevo plan en el momento.
-      </p>
+      {pendiente ? (
+        <p className="note text-gris flex items-center gap-2">
+          <Clock size={15} strokeWidth={1.5} className="shrink-0 text-ink" />
+          Tienes una solicitud pendiente al plan{' '}
+          <b className="text-ink">{planes[pendiente.plan]?.nombre || pendiente.plan}</b>. La
+          activaremos apenas confirmemos tu pago.
+        </p>
+      ) : data.solicitud?.estado === 'RECHAZADA' ? (
+        <p className="note-error">
+          Tu última solicitud fue rechazada. Si crees que es un error, contáctanos y vuelve a
+          intentarlo.
+        </p>
+      ) : (
+        <p className="note text-gris">
+          Elige un plan, paga por QR o transferencia y sube tu comprobante: lo activamos apenas
+          lo confirmemos.
+        </p>
+      )}
+
+      {/* Modal de solicitud */}
+      <Modal
+        title={`Solicitar plan ${planes[pedido]?.nombre || ''}`}
+        open={!!pedido}
+        onClose={() => setPedido(null)}
+      >
+        {pedido && (
+          <form onSubmit={enviarSolicitud} className="space-y-4">
+            <p className="text-sm text-gris">
+              {planes[pedido]?.precio > 0 ? (
+                <>
+                  Realiza el pago de{' '}
+                  <b className="text-ink">Bs {planes[pedido].precio}/mes</b> por QR o
+                  transferencia y sube la foto del comprobante.
+                </>
+              ) : (
+                'Confirma que quieres bajar al plan gratuito.'
+              )}
+            </p>
+
+            {planes[pedido]?.precio > 0 && (
+              <div>
+                <label className="label">Comprobante de pago</label>
+                <div className="flex items-center gap-3">
+                  {comprobanteUrl && (
+                    <img
+                      src={comprobanteUrl}
+                      alt="comprobante"
+                      className="h-16 object-contain rounded-sm border border-line"
+                    />
+                  )}
+                  <label className="btn-secondary cursor-pointer">
+                    <Upload size={14} strokeWidth={1.5} />{' '}
+                    {uploading ? 'Subiendo…' : comprobanteUrl ? 'Cambiar' : 'Subir comprobante'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={subirComprobante}
+                      disabled={uploading}
+                    />
+                  </label>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="label">Nota (opcional)</label>
+              <input
+                className="input"
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder="Pagué desde la cuenta de…"
+              />
+            </div>
+
+            {formError && <p className="note-error">{formError}</p>}
+
+            <div className="flex justify-end gap-2">
+              <button type="button" onClick={() => setPedido(null)} className="btn-secondary">
+                Cancelar
+              </button>
+              <button type="submit" className="btn-primary" disabled={saving || uploading}>
+                {saving ? 'Enviando…' : 'Enviar solicitud'}
+              </button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

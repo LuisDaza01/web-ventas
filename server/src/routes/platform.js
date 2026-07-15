@@ -125,10 +125,80 @@ router.post(
           tiendaId: nueva.id,
         },
       });
+      await seedDemo(tx, nueva.id);
       return nueva;
     });
 
     res.status(201).json(tienda);
+  })
+);
+
+// Productos de ejemplo para que la tienda nueva no arranque vacía: el admin ve
+// el catálogo/POS funcionando desde el primer minuto y luego los reemplaza.
+async function seedDemo(tx, tiendaId) {
+  const categoria = await tx.category.create({
+    data: { name: 'Ejemplos', tiendaId },
+  });
+  const demo = [
+    { barcode: 'DEMO-001', name: 'Agua 2L (ejemplo)', purchasePrice: 4, salePrice: 6, stock: 24 },
+    { barcode: 'DEMO-002', name: 'Galletas surtidas (ejemplo)', purchasePrice: 2.5, salePrice: 4, stock: 30 },
+    { barcode: 'DEMO-003', name: 'Jabón de tocador (ejemplo)', purchasePrice: 3, salePrice: 5, stock: 15 },
+    { barcode: 'DEMO-004', name: 'Arroz 1kg (ejemplo)', purchasePrice: 7, salePrice: 9.5, stock: 20 },
+    { barcode: 'DEMO-005', name: 'Refresco lata (ejemplo)', purchasePrice: 5, salePrice: 8, stock: 12 },
+  ];
+  await tx.product.createMany({
+    data: demo.map((p) => ({ ...p, tiendaId, categoryId: categoria.id, minStock: 5 })),
+  });
+}
+
+// ---- Solicitudes de cambio de plan ----
+
+// GET /api/platform/solicitudes?estado=PENDIENTE -> solicitudes de todas las tiendas
+router.get(
+  '/solicitudes',
+  asyncHandler(async (req, res) => {
+    const where = {};
+    if (req.query.estado) where.estado = String(req.query.estado);
+    const solicitudes = await prisma.solicitudPlan.findMany({
+      where,
+      include: { tienda: { select: { id: true, nombre: true, slug: true, plan: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+    res.json(solicitudes);
+  })
+);
+
+// PATCH /api/platform/solicitudes/:id { estado: APROBADA | RECHAZADA }
+// Al aprobar, el plan de la tienda se actualiza en la misma transacción.
+router.patch(
+  '/solicitudes/:id',
+  asyncHandler(async (req, res) => {
+    const id = Number(req.params.id);
+    const { estado } = z
+      .object({ estado: z.enum(['APROBADA', 'RECHAZADA']) })
+      .parse(req.body);
+
+    const solicitud = await prisma.solicitudPlan.findUnique({ where: { id } });
+    if (!solicitud) throw new HttpError(404, 'Solicitud no encontrada.');
+    if (solicitud.estado !== 'PENDIENTE') {
+      throw new HttpError(400, 'Esta solicitud ya fue resuelta.');
+    }
+
+    const actualizada = await prisma.$transaction(async (tx) => {
+      if (estado === 'APROBADA') {
+        await tx.tienda.update({
+          where: { id: solicitud.tiendaId },
+          data: { plan: solicitud.plan },
+        });
+      }
+      return tx.solicitudPlan.update({
+        where: { id },
+        data: { estado, resolvedAt: new Date() },
+        include: { tienda: { select: { id: true, nombre: true, plan: true } } },
+      });
+    });
+    res.json(actualizada);
   })
 );
 
@@ -229,6 +299,10 @@ router.delete(
       await tx.product.deleteMany({ where: { tiendaId: id } });
       await tx.category.deleteMany({ where: { tiendaId: id } });
       await tx.supplier.deleteMany({ where: { tiendaId: id } });
+      await tx.abono.deleteMany({ where: { tiendaId: id } });
+      await tx.cliente.deleteMany({ where: { tiendaId: id } });
+      await tx.cajaSesion.deleteMany({ where: { tiendaId: id } });
+      await tx.solicitudPlan.deleteMany({ where: { tiendaId: id } });
       await tx.user.deleteMany({ where: { tiendaId: id } });
       await tx.tienda.delete({ where: { id } });
     });

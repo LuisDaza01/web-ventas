@@ -15,9 +15,16 @@ import {
   LogOut,
   Menu,
   X,
+  Contact,
+  Wallet,
+  MessageCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
+
+// WhatsApp de soporte de la plataforma (con código de país), configurable por
+// entorno. Sin él, el botón de soporte no se muestra.
+const SOPORTE_WHATSAPP = (import.meta.env.VITE_WHATSAPP_SOPORTE || '').replace(/\D/g, '');
 
 const NAV = [
   { to: '/plataforma', label: 'Tiendas', icon: Store, roles: ['SUPERADMIN'] },
@@ -25,6 +32,8 @@ const NAV = [
   { to: '/', label: 'Inicio', icon: LayoutDashboard, roles: ['ADMIN', 'CAJERO', 'ALMACEN'] },
   { to: '/catalogo', label: 'Catálogo', icon: LayoutGrid, roles: ['ADMIN', 'CAJERO'] },
   { to: '/pos', label: 'Punto de venta', icon: ScanBarcode, roles: ['ADMIN', 'CAJERO'] },
+  { to: '/caja', label: 'Caja', icon: Wallet, roles: ['ADMIN', 'CAJERO'] },
+  { to: '/clientes', label: 'Clientes', icon: Contact, roles: ['ADMIN', 'CAJERO'] },
   { to: '/productos', label: 'Productos', icon: Package, roles: ['ADMIN', 'ALMACEN'] },
   { to: '/compras', label: 'Entrada de stock', icon: TruckIcon, roles: ['ADMIN', 'ALMACEN'] },
   { to: '/reportes', label: 'Reportes', icon: BarChart3, roles: ['ADMIN'] },
@@ -104,6 +113,16 @@ export default function Layout({ children }) {
             <p className="font-display font-medium text-ink">{user.name}</p>
             <p className="micro mt-0.5">{ROLE_LABEL[user.role]}</p>
           </div>
+          {SOPORTE_WHATSAPP && (
+            <a
+              href={`https://wa.me/${SOPORTE_WHATSAPP}?text=${encodeURIComponent('Hola, necesito ayuda con Web Ventas')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary w-full mt-2"
+            >
+              <MessageCircle size={14} strokeWidth={1.5} /> Soporte
+            </a>
+          )}
           <button onClick={handleLogout} className="btn-secondary w-full mt-2">
             <LogOut size={14} strokeWidth={1.5} /> Cerrar sesión
           </button>

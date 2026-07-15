@@ -1,0 +1,17 @@
+# Indexar la landing y los catálogos públicos; el panel interno no aporta al SEO.
+User-agent: *
+Allow: /$
+Allow: /t/
+Disallow: /login
+Disallow: /pos
+Disallow: /catalogo
+Disallow: /productos
+Disallow: /compras
+Disallow: /reportes
+Disallow: /usuarios
+Disallow: /plan
+Disallow: /ajustes
+Disallow: /caja
+Disallow: /clientes
+Disallow: /plataforma
+Disallow: /api/

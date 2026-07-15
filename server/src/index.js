@@ -16,6 +16,9 @@ import catalogRoutes from './routes/catalog.js';
 import platformRoutes from './routes/platform.js';
 import subscriptionRoutes from './routes/subscription.js';
 import tiendaRoutes from './routes/tienda.js';
+import publicRoutes from './routes/public.js';
+import clienteRoutes from './routes/clientes.js';
+import cajaRoutes from './routes/caja.js';
 import { notFound, errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -45,6 +48,9 @@ app.use('/api/catalog', catalogRoutes);
 app.use('/api/platform', platformRoutes);
 app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/tienda', tiendaRoutes);
+app.use('/api/public', publicRoutes); // catálogo público, SIN autenticación
+app.use('/api/clientes', clienteRoutes);
+app.use('/api/caja', cajaRoutes);
 
 // En producción servimos el frontend ya compilado (carpeta ./public, copiada en
 // el Docker build). Misma URL para app y API -> sin CORS y con el HTTPS de Railway.

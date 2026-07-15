@@ -1,6 +1,6 @@
 // Punto de venta: escanear código de barras, carrito, totales, cambio y recibo.
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { ScanBarcode, Trash2, Plus, Minus, Printer, Camera, Banknote, QrCode } from 'lucide-react';
+import { ScanBarcode, Trash2, Plus, Minus, Printer, Camera, Banknote, QrCode, NotebookPen, UserPlus } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -16,11 +16,41 @@ export default function POS() {
   const [code, setCode] = useState('');
   const [message, setMessage] = useState(null); // { type: 'error'|'ok', text }
   const [paid, setPaid] = useState('');
-  const [metodoPago, setMetodoPago] = useState('EFECTIVO'); // 'EFECTIVO' | 'QR'
+  const [metodoPago, setMetodoPago] = useState('EFECTIVO'); // 'EFECTIVO' | 'QR' | 'CREDITO'
   const [receipt, setReceipt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const inputRef = useRef(null);
+
+  // Venta al crédito (fiado): cliente al que se le anota la deuda.
+  const [clientes, setClientes] = useState(null); // null = aún no cargados
+  const [clienteId, setClienteId] = useState('');
+  const [nuevoCliente, setNuevoCliente] = useState(null); // { nombre, telefono } | null
+
+  // Carga los clientes la primera vez que se elige "Fiado".
+  useEffect(() => {
+    if (metodoPago === 'CREDITO' && clientes === null) {
+      api
+        .get('/clientes')
+        .then((r) => setClientes(r.data))
+        .catch(() => setClientes([]));
+    }
+  }, [metodoPago, clientes]);
+
+  async function crearClienteRapido(e) {
+    e.preventDefault();
+    try {
+      const { data } = await api.post('/clientes', {
+        nombre: nuevoCliente.nombre.trim(),
+        telefono: nuevoCliente.telefono || null,
+      });
+      setClientes((prev) => [...(prev || []), data]);
+      setClienteId(String(data.id));
+      setNuevoCliente(null);
+    } catch (err) {
+      flash('error', errorMsg(err));
+    }
+  }
 
   // Mantener el foco en el campo del escáner (el lector USB/Bluetooth "teclea" el código).
   const focusInput = () => inputRef.current?.focus();
@@ -73,17 +103,25 @@ export default function POS() {
     if (metodoPago === 'QR' && !tienda?.qrPagoUrl) {
       return flash('error', 'Sube tu QR de cobro en Ajustes para cobrar por QR.');
     }
+    if (metodoPago === 'CREDITO') {
+      if (!clienteId) return flash('error', 'Elige el cliente al que se fía la venta.');
+      if ((Number(paid) || 0) >= total) {
+        return flash('error', 'El abono inicial cubre el total: cóbrala en efectivo.');
+      }
+    }
     setSaving(true);
     try {
       const { data } = await api.post('/sales', {
         items: cart.map((i) => ({ productId: i.id, quantity: i.qty })),
-        paid: metodoPago === 'QR' ? total : Number(paid),
+        paid: metodoPago === 'QR' ? total : Number(paid) || 0,
         metodoPago,
+        ...(metodoPago === 'CREDITO' ? { clienteId: Number(clienteId) } : {}),
       });
       setReceipt(data);
       clear();
       setPaid('');
       setMetodoPago('EFECTIVO');
+      setClienteId('');
     } catch (err) {
       flash('error', errorMsg(err));
     } finally {
@@ -181,23 +219,102 @@ export default function POS() {
         {/* Método de pago */}
         <div>
           <label className="label">Método de pago</label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setMetodoPago('EFECTIVO')}
-              className={metodoPago === 'EFECTIVO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}
+              className={`!px-2 ${metodoPago === 'EFECTIVO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
             >
               <Banknote size={15} strokeWidth={1.5} /> Efectivo
             </button>
             <button
               type="button"
               onClick={() => setMetodoPago('QR')}
-              className={metodoPago === 'QR' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}
+              className={`!px-2 ${metodoPago === 'QR' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
             >
               <QrCode size={15} strokeWidth={1.5} /> QR
             </button>
+            <button
+              type="button"
+              onClick={() => setMetodoPago('CREDITO')}
+              className={`!px-2 ${metodoPago === 'CREDITO' ? 'btn-primary' : 'btn-secondary !border-line !text-gris hover:!bg-transparent hover:!border-ink hover:!text-ink'}`}
+            >
+              <NotebookPen size={15} strokeWidth={1.5} /> Fiado
+            </button>
           </div>
         </div>
+
+        {metodoPago === 'CREDITO' && (
+          <div className="space-y-3">
+            <div>
+              <label className="label">Cliente</label>
+              <div className="flex items-center gap-2">
+                <select
+                  className="input flex-1"
+                  value={clienteId}
+                  onChange={(e) => setClienteId(e.target.value)}
+                >
+                  <option value="">— Elegir cliente —</option>
+                  {(clientes || []).map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                      {c.deuda > 0 ? ` (debe ${money(c.deuda)})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setNuevoCliente({ nombre: '', telefono: '' })}
+                  className="btn-secondary shrink-0 !px-2.5"
+                  title="Registrar cliente nuevo"
+                >
+                  <UserPlus size={14} strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+            {nuevoCliente && (
+              <form onSubmit={crearClienteRapido} className="card p-3 space-y-2 bg-paper">
+                <p className="micro">Cliente nuevo</p>
+                <input
+                  className="input"
+                  placeholder="Nombre"
+                  value={nuevoCliente.nombre}
+                  onChange={(e) => setNuevoCliente((c) => ({ ...c, nombre: e.target.value }))}
+                  required
+                  autoFocus
+                />
+                <input
+                  className="input"
+                  placeholder="Teléfono (opcional)"
+                  value={nuevoCliente.telefono}
+                  onChange={(e) => setNuevoCliente((c) => ({ ...c, telefono: e.target.value }))}
+                />
+                <div className="flex gap-2 justify-end">
+                  <button type="button" onClick={() => setNuevoCliente(null)} className="btn-secondary !py-1 !px-2 !text-[10px]">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn-primary !py-1 !px-2 !text-[10px]">
+                    Guardar
+                  </button>
+                </div>
+              </form>
+            )}
+            <div>
+              <label className="label">Abono inicial (opcional)</label>
+              <input
+                type="number" step="0.01" min="0" className="input text-lg font-display"
+                value={paid} onChange={(e) => setPaid(e.target.value)}
+                placeholder="0.00"
+              />
+              <div className="flex items-baseline justify-between border-t border-line pt-3 mt-3">
+                <span className="micro">Queda debiendo</span>
+                <span className="display text-2xl text-accent">
+                  {money(Math.max(total - (Number(paid) || 0), 0))}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
 
         {metodoPago === 'EFECTIVO' ? (
           <>
@@ -216,7 +333,7 @@ export default function POS() {
               </span>
             </div>
           </>
-        ) : (
+        ) : metodoPago === 'QR' ? (
           <div className="text-center">
             {tienda?.qrPagoUrl ? (
               <>
@@ -229,14 +346,25 @@ export default function POS() {
               </p>
             )}
           </div>
-        )}
+        ) : null}
 
         <button
           onClick={confirmSale}
-          disabled={saving || cart.length === 0 || (metodoPago === 'QR' && !tienda?.qrPagoUrl)}
+          disabled={
+            saving ||
+            cart.length === 0 ||
+            (metodoPago === 'QR' && !tienda?.qrPagoUrl) ||
+            (metodoPago === 'CREDITO' && !clienteId)
+          }
           className="btn-primary w-full py-3.5"
         >
-          {saving ? 'Procesando...' : metodoPago === 'QR' ? 'Confirmar pago recibido' : 'Cobrar'}
+          {saving
+            ? 'Procesando...'
+            : metodoPago === 'QR'
+              ? 'Confirmar pago recibido'
+              : metodoPago === 'CREDITO'
+                ? 'Anotar fiado'
+                : 'Cobrar'}
         </button>
       </div>
 
@@ -287,11 +415,23 @@ function Receipt({ receipt, onClose }) {
         </div>
         <div className="pt-2 space-y-1">
           <div className="flex justify-between font-bold text-base"><span>TOTAL</span><span>{money(receipt.total)}</span></div>
-          <div className="flex justify-between"><span>Pago</span><span>{receipt.metodoPago === 'QR' ? 'QR' : 'Efectivo'}</span></div>
-          {receipt.metodoPago !== 'QR' && (
+          <div className="flex justify-between">
+            <span>Pago</span>
+            <span>{receipt.metodoPago === 'QR' ? 'QR' : receipt.metodoPago === 'CREDITO' ? 'Fiado' : 'Efectivo'}</span>
+          </div>
+          {receipt.metodoPago === 'EFECTIVO' && (
             <>
               <div className="flex justify-between"><span>Recibido</span><span>{money(receipt.paid)}</span></div>
               <div className="flex justify-between"><span>Cambio</span><span>{money(receipt.change)}</span></div>
+            </>
+          )}
+          {receipt.metodoPago === 'CREDITO' && (
+            <>
+              {receipt.cliente && (
+                <div className="flex justify-between"><span>Cliente</span><span>{receipt.cliente.nombre}</span></div>
+              )}
+              <div className="flex justify-between"><span>Abono</span><span>{money(receipt.paid)}</span></div>
+              <div className="flex justify-between font-bold"><span>SALDO PENDIENTE</span><span>{money(receipt.saldo)}</span></div>
             </>
           )}
         </div>
