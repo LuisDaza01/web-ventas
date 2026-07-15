@@ -1,6 +1,6 @@
 // Punto de venta: escanear código de barras, carrito, totales, cambio y recibo.
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { ScanBarcode, Trash2, Plus, Minus, Printer, Camera, Banknote, QrCode, NotebookPen, UserPlus } from 'lucide-react';
+import { ScanBarcode, Trash2, Plus, Minus, Printer, Camera, Banknote, QrCode, NotebookPen, UserPlus, Maximize2, X } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useCart } from '../context/CartContext.jsx';
@@ -20,6 +20,7 @@ export default function POS() {
   const [receipt, setReceipt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [qrGrande, setQrGrande] = useState(false); // QR de cobro a pantalla completa
   const inputRef = useRef(null);
 
   // Venta al crédito (fiado): cliente al que se le anota la deuda.
@@ -338,7 +339,21 @@ export default function POS() {
             {tienda?.qrPagoUrl ? (
               <>
                 <p className="text-sm text-gris mb-2">El cliente escanea para pagar <b className="text-ink">{money(total)}</b></p>
-                <img src={tienda.qrPagoUrl} alt="QR de pago" className="mx-auto max-h-56 object-contain rounded-md border border-line p-2 bg-white" />
+                <button
+                  type="button"
+                  onClick={() => setQrGrande(true)}
+                  title="Toca para ampliar el QR"
+                  className="block mx-auto"
+                >
+                  <img src={tienda.qrPagoUrl} alt="QR de pago" className="mx-auto max-h-72 object-contain rounded-xl border border-line p-2 bg-white" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setQrGrande(true)}
+                  className="btn-secondary w-full mt-3"
+                >
+                  <Maximize2 size={15} strokeWidth={1.75} /> Ampliar QR
+                </button>
               </>
             ) : (
               <p className="note-error text-left">
@@ -380,6 +395,31 @@ export default function POS() {
             }}
           />
         </Suspense>
+      )}
+
+      {/* QR de cobro a pantalla completa (para mostrarle al cliente) */}
+      {qrGrande && tienda?.qrPagoUrl && (
+        <div
+          className="fixed inset-0 z-50 bg-white flex flex-col items-center justify-center p-6 cursor-pointer"
+          onClick={() => setQrGrande(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setQrGrande(false)}
+            className="absolute top-4 right-4 p-2.5 rounded-full bg-paper text-gris hover:text-ink"
+            title="Cerrar"
+          >
+            <X size={22} strokeWidth={2} />
+          </button>
+          <p className="micro mb-1">Escanea para pagar</p>
+          <p className="display text-5xl sm:text-6xl mb-6 text-brandDark">{money(total)}</p>
+          <img
+            src={tienda.qrPagoUrl}
+            alt="QR de pago"
+            className="max-h-[65vh] max-w-[90vw] object-contain rounded-2xl border border-line p-3 bg-white shadow-lift"
+          />
+          <p className="text-sm text-gris mt-6">{tienda?.nombre} · Toca la pantalla para cerrar</p>
+        </div>
       )}
 
       {/* Recibo */}
