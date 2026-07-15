@@ -1,6 +1,6 @@
 // Punto de venta: escanear código de barras, carrito, totales, cambio y recibo.
 import { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera } from 'lucide-react';
+import { ScanBarcode, Trash2, Plus, Minus, CheckCircle2, Printer, Camera, Banknote, QrCode } from 'lucide-react';
 import { api, errorMsg, money } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import Modal from '../components/Modal.jsx';
@@ -9,10 +9,12 @@ import Modal from '../components/Modal.jsx';
 const BarcodeScanner = lazy(() => import('../components/BarcodeScanner.jsx'));
 
 export default function POS() {
+  const { tienda } = useAuth();
   const [code, setCode] = useState('');
   const [cart, setCart] = useState([]); // { id, name, salePrice, stock, qty }
   const [message, setMessage] = useState(null); // { type: 'error'|'ok', text }
   const [paid, setPaid] = useState('');
+  const [metodoPago, setMetodoPago] = useState('EFECTIVO'); // 'EFECTIVO' | 'QR'
   const [receipt, setReceipt] = useState(null);
   const [saving, setSaving] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -91,16 +93,23 @@ export default function POS() {
 
   async function confirmSale() {
     if (cart.length === 0) return flash('error', 'El carrito está vacío.');
-    if ((Number(paid) || 0) < total) return flash('error', 'El monto recibido es menor al total.');
+    if (metodoPago === 'EFECTIVO' && (Number(paid) || 0) < total) {
+      return flash('error', 'El monto recibido es menor al total.');
+    }
+    if (metodoPago === 'QR' && !tienda?.qrPagoUrl) {
+      return flash('error', 'Sube tu QR de cobro en Ajustes para cobrar por QR.');
+    }
     setSaving(true);
     try {
       const { data } = await api.post('/sales', {
         items: cart.map((i) => ({ productId: i.id, quantity: i.qty })),
-        paid: Number(paid),
+        paid: metodoPago === 'QR' ? total : Number(paid),
+        metodoPago,
       });
       setReceipt(data);
       setCart([]);
       setPaid('');
+      setMetodoPago('EFECTIVO');
     } catch (err) {
       flash('error', errorMsg(err));
     } finally {
@@ -187,22 +196,67 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Método de pago */}
         <div>
-          <label className="label">Monto recibido</label>
-          <input
-            type="number" step="0.01" min="0" className="input text-lg"
-            value={paid} onChange={(e) => setPaid(e.target.value)}
-            placeholder="0.00"
-          />
+          <label className="label">Método de pago</label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setMetodoPago('EFECTIVO')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium border transition ${
+                metodoPago === 'EFECTIVO' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <Banknote size={16} /> Efectivo
+            </button>
+            <button
+              type="button"
+              onClick={() => setMetodoPago('QR')}
+              className={`flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-medium border transition ${
+                metodoPago === 'QR' ? 'bg-brand-600 text-white border-brand-600' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <QrCode size={16} /> QR
+            </button>
+          </div>
         </div>
 
-        <div className={`flex justify-between font-semibold rounded-lg px-3 py-2 ${change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-400'}`}>
-          <span>Cambio</span>
-          <span>{money(change >= 0 ? change : 0)}</span>
-        </div>
+        {metodoPago === 'EFECTIVO' ? (
+          <>
+            <div>
+              <label className="label">Monto recibido</label>
+              <input
+                type="number" step="0.01" min="0" className="input text-lg"
+                value={paid} onChange={(e) => setPaid(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div className={`flex justify-between font-semibold rounded-lg px-3 py-2 ${change >= 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-400'}`}>
+              <span>Cambio</span>
+              <span>{money(change >= 0 ? change : 0)}</span>
+            </div>
+          </>
+        ) : (
+          <div className="text-center">
+            {tienda?.qrPagoUrl ? (
+              <>
+                <p className="text-sm text-slate-500 mb-2">El cliente escanea para pagar <b>{money(total)}</b></p>
+                <img src={tienda.qrPagoUrl} alt="QR de pago" className="mx-auto max-h-56 object-contain rounded-lg border border-slate-200 p-2 bg-white" />
+              </>
+            ) : (
+              <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                Aún no subes tu QR de cobro. Ve a <b>Ajustes → QR de cobro</b>.
+              </p>
+            )}
+          </div>
+        )}
 
-        <button onClick={confirmSale} disabled={saving || cart.length === 0} className="btn-primary w-full text-base py-3">
-          <CheckCircle2 size={20} /> {saving ? 'Procesando...' : 'Confirmar venta'}
+        <button
+          onClick={confirmSale}
+          disabled={saving || cart.length === 0 || (metodoPago === 'QR' && !tienda?.qrPagoUrl)}
+          className="btn-primary w-full text-base py-3"
+        >
+          <CheckCircle2 size={20} /> {saving ? 'Procesando...' : metodoPago === 'QR' ? 'Confirmar pago recibido' : 'Confirmar venta'}
         </button>
       </div>
 
@@ -262,8 +316,13 @@ function Receipt({ receipt, onClose }) {
         </div>
         <div className="pt-2 space-y-1">
           <div className="flex justify-between font-bold text-base"><span>TOTAL</span><span>{money(receipt.total)}</span></div>
-          <div className="flex justify-between"><span>Recibido</span><span>{money(receipt.paid)}</span></div>
-          <div className="flex justify-between"><span>Cambio</span><span>{money(receipt.change)}</span></div>
+          <div className="flex justify-between"><span>Pago</span><span>{receipt.metodoPago === 'QR' ? 'QR' : 'Efectivo'}</span></div>
+          {receipt.metodoPago !== 'QR' && (
+            <>
+              <div className="flex justify-between"><span>Recibido</span><span>{money(receipt.paid)}</span></div>
+              <div className="flex justify-between"><span>Cambio</span><span>{money(receipt.change)}</span></div>
+            </>
+          )}
         </div>
         <p className="text-center text-xs text-slate-400 mt-3">
           {tienda?.mensajeRecibo || '¡Gracias por su compra!'}

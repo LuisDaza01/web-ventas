@@ -7,11 +7,19 @@ import { authenticate, authorize } from '../middleware/auth.js';
 const router = Router();
 router.use(authenticate, authorize('ADMIN')); // Solo el administrador ve reportes.
 
+// Interpreta "YYYY-MM-DD" como fecha LOCAL (no UTC), para que el rango coincida
+// con el día del usuario. Sin valor, usa la fecha indicada por defecto.
+function parseLocalDate(str, fallback) {
+  const m = str && /^(\d{4})-(\d{2})-(\d{2})/.exec(String(str));
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return new Date(fallback);
+}
+
 function rangeFromQuery(query) {
   // Por defecto: el día de hoy.
   const now = new Date();
-  const start = query.from ? new Date(String(query.from)) : new Date(now);
-  const end = query.to ? new Date(String(query.to)) : new Date(now);
+  const start = parseLocalDate(query.from, now);
+  const end = parseLocalDate(query.to, now);
   start.setHours(0, 0, 0, 0);
   end.setHours(23, 59, 59, 999);
   return { start, end };
