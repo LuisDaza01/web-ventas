@@ -11,24 +11,33 @@ import { beep } from '../utils/beep.js';
 export default function Catalogo() {
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
+  const [categorias, setCategorias] = useState([]);
+  const [categoria, setCategoria] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState('');
   const { addItem, totalItems, total } = useCart();
   const navigate = useNavigate();
 
+  // Categorías para el filtro (una sola vez).
+  useEffect(() => {
+    api.get('/catalog/categories').then((r) => setCategorias(r.data)).catch(() => {});
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.get('/products', { params: { search, pageSize: 100 } });
+      const { data } = await api.get('/products', {
+        params: { search, pageSize: 100, categoryId: categoria || undefined },
+      });
       setItems(data.items);
     } catch (e) {
       setError(errorMsg(e));
     } finally {
       setLoading(false);
     }
-  }, [search]);
+  }, [search, categoria]);
 
   // Búsqueda con pequeño retardo para no pedir en cada tecla.
   useEffect(() => {
@@ -60,6 +69,27 @@ export default function Catalogo() {
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
+
+      {/* Filtro por categoría */}
+      {categorias.length > 0 && (
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => setCategoria(null)}
+            className={`badge cursor-pointer transition-colors ${!categoria ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+          >
+            Todo
+          </button>
+          {categorias.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setCategoria(c.id === categoria ? null : c.id)}
+              className={`badge cursor-pointer transition-colors ${categoria === c.id ? 'badge-ink bg-ink !text-white' : 'hover:border-ink hover:text-ink'}`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {error && <p className="note-error">{error}</p>}
       {flash && <div className="note-ok">{flash}</div>}

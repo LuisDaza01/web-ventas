@@ -38,16 +38,26 @@ model Tienda {
   logoUrl       String? // logo de la tienda
   qrPagoUrl     String? // imagen del QR de cobro (el cliente lo escanea para pagar)
 
+  // Catálogo público (canal de venta): página sin login en /t/:slug donde los
+  // clientes ven los productos y arman su pedido por WhatsApp.
+  catalogoPublico Boolean @default(false) // habilita la página pública
+  whatsapp        String? // número de WhatsApp para pedidos (con código de país)
+  descripcion     String? // texto corto que se muestra en el catálogo público
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users      User[]
-  categories Category[]
-  suppliers  Supplier[]
-  products   Product[]
-  sales      Sale[]
-  purchases  Purchase[]
-  movements  StockMovement[]
+  users       User[]
+  categories  Category[]
+  suppliers   Supplier[]
+  products    Product[]
+  sales       Sale[]
+  purchases   Purchase[]
+  movements   StockMovement[]
+  clientes    Cliente[]
+  abonos      Abono[]
+  cajas       CajaSesion[]
+  solicitudes SolicitudPlan[]
 }
 
 // ---------- Usuarios y roles ----------
@@ -74,6 +84,8 @@ model User {
   sales     Sale[]
   purchases Purchase[]
   movements StockMovement[]
+  abonos    Abono[]
+  cajas     CajaSesion[]
 
   @@index([tiendaId])
 }
@@ -140,6 +152,7 @@ model Product {
 enum MetodoPago {
   EFECTIVO
   QR
+  CREDITO // venta fiada: se registra al cliente y el saldo pendiente
 }
 
 model Sale {
@@ -149,14 +162,101 @@ model Sale {
   tiendaId   Int
   tienda     Tienda     @relation(fields: [tiendaId], references: [id])
   total      Decimal    @db.Decimal(12, 2)
-  paid       Decimal    @db.Decimal(12, 2) // monto recibido
+  paid       Decimal    @db.Decimal(12, 2) // monto recibido (en CREDITO: abono inicial)
   change     Decimal    @db.Decimal(12, 2) // cambio / vuelto
   metodoPago MetodoPago @default(EFECTIVO)
+  clienteId  Int? // cliente asociado (obligatorio si es CREDITO)
+  cliente    Cliente?   @relation(fields: [clienteId], references: [id])
+  saldo      Decimal    @default(0) @db.Decimal(12, 2) // deuda pendiente (solo CREDITO)
   createdAt  DateTime   @default(now())
   items      SaleItem[]
+  abonos     Abono[]
 
   @@index([tiendaId])
   @@index([createdAt])
+  @@index([clienteId])
+}
+
+// ---------- Clientes y crédito (fiado) ----------
+model Cliente {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  telefono  String?
+  nota      String?
+  tiendaId  Int
+  tienda    Tienda   @relation(fields: [tiendaId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sales  Sale[]
+  abonos Abono[]
+
+  @@index([tiendaId])
+}
+
+// Pago parcial de una venta al crédito.
+model Abono {
+  id         Int        @id @default(autoincrement())
+  saleId     Int
+  sale       Sale       @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  clienteId  Int
+  cliente    Cliente    @relation(fields: [clienteId], references: [id])
+  tiendaId   Int
+  tienda     Tienda     @relation(fields: [tiendaId], references: [id])
+  monto      Decimal    @db.Decimal(12, 2)
+  metodoPago MetodoPago @default(EFECTIVO) // EFECTIVO o QR
+  userId     Int?
+  user       User?      @relation(fields: [userId], references: [id])
+  createdAt  DateTime   @default(now())
+
+  @@index([tiendaId])
+  @@index([saleId])
+  @@index([clienteId])
+  @@index([createdAt])
+}
+
+// ---------- Caja (apertura / cierre de turno) ----------
+model CajaSesion {
+  id           Int       @id @default(autoincrement())
+  tiendaId     Int
+  tienda       Tienda    @relation(fields: [tiendaId], references: [id])
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id])
+  montoInicial Decimal   @default(0) @db.Decimal(12, 2) // efectivo con el que abre
+  montoFinal   Decimal?  @db.Decimal(12, 2) // efectivo contado al cerrar
+  esperado     Decimal?  @db.Decimal(12, 2) // efectivo que debería haber
+  diferencia   Decimal?  @db.Decimal(12, 2) // montoFinal - esperado
+  nota         String?
+  abierta      Boolean   @default(true)
+  openedAt     DateTime  @default(now())
+  closedAt     DateTime?
+
+  @@index([tiendaId])
+  @@index([abierta])
+}
+
+// ---------- Solicitudes de cambio de plan ----------
+enum SolicitudEstado {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+// La tienda pide un plan y adjunta su comprobante de pago (QR/transferencia).
+// El SUPERADMIN la aprueba (cambia el plan) o la rechaza desde la plataforma.
+model SolicitudPlan {
+  id             Int             @id @default(autoincrement())
+  tiendaId       Int
+  tienda         Tienda          @relation(fields: [tiendaId], references: [id])
+  plan           Plan
+  comprobanteUrl String? // imagen del comprobante de pago
+  nota           String?
+  estado         SolicitudEstado @default(PENDIENTE)
+  createdAt      DateTime        @default(now())
+  resolvedAt     DateTime?
+
+  @@index([tiendaId])
+  @@index([estado])
 }
 
 model SaleItem {

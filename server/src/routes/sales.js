@@ -18,7 +18,8 @@ const saleSchema = z.object({
     )
     .min(1, 'La venta debe tener al menos un producto'),
   paid: z.coerce.number().min(0).default(0),
-  metodoPago: z.enum(['EFECTIVO', 'QR']).default('EFECTIVO'),
+  metodoPago: z.enum(['EFECTIVO', 'QR', 'CREDITO']).default('EFECTIVO'),
+  clienteId: z.coerce.number().int().positive().optional(), // obligatorio en CREDITO
 });
 
 // POST /api/sales  (admin o cajero) -> confirma la venta de forma atómica
@@ -26,7 +27,7 @@ router.post(
   '/',
   authorize('ADMIN', 'CAJERO'),
   asyncHandler(async (req, res) => {
-    const { items, paid, metodoPago } = saleSchema.parse(req.body);
+    const { items, paid, metodoPago, clienteId } = saleSchema.parse(req.body);
 
     // Toda la operación va dentro de una transacción: si algo falla, no se
     // descuenta stock ni se guarda la venta a medias.
@@ -55,9 +56,19 @@ router.post(
 
       // En pago por QR el cliente paga el monto exacto (sin cambio).
       // En efectivo se valida que el monto recibido alcance.
-      const montoPagado = metodoPago === 'QR' ? total : paid;
-      if (metodoPago !== 'QR' && paid < total) {
+      // En CREDITO (fiado) `paid` es el abono inicial (puede ser 0) y queda saldo.
+      let montoPagado = paid;
+      if (metodoPago === 'QR') montoPagado = total;
+      if (metodoPago === 'EFECTIVO' && paid < total) {
         throw new HttpError(400, `El monto recibido (${paid}) es menor al total (${total}).`);
+      }
+      if (metodoPago === 'CREDITO') {
+        if (!clienteId) throw new HttpError(400, 'La venta al crédito necesita un cliente.');
+        const cliente = await tx.cliente.findUnique({ where: { id: clienteId } });
+        if (!cliente) throw new HttpError(404, 'Cliente no encontrado.');
+        if (paid >= total) {
+          throw new HttpError(400, 'El abono inicial cubre el total: cóbrala en efectivo.');
+        }
       }
 
       const created = await tx.sale.create({
@@ -65,8 +76,10 @@ router.post(
           userId: req.user.id,
           total,
           paid: montoPagado,
-          change: montoPagado - total,
+          change: metodoPago === 'CREDITO' ? 0 : montoPagado - total,
           metodoPago,
+          clienteId: metodoPago === 'CREDITO' ? clienteId : null,
+          saldo: metodoPago === 'CREDITO' ? total - paid : 0,
           items: {
             create: lineData.map((l) => ({
               productId: l.product.id,
@@ -105,7 +118,11 @@ router.post(
     // Devolver la venta completa (recibo).
     const full = await prisma.sale.findUnique({
       where: { id: sale.id },
-      include: { items: { include: { product: true } }, user: { select: { name: true } } },
+      include: {
+        items: { include: { product: true } },
+        user: { select: { name: true } },
+        cliente: { select: { id: true, nombre: true } },
+      },
     });
     res.status(201).json(serializeSale(full));
   })
@@ -124,7 +141,11 @@ router.get(
     }
     const sales = await prisma.sale.findMany({
       where,
-      include: { user: { select: { name: true } }, _count: { select: { items: true } } },
+      include: {
+        user: { select: { name: true } },
+        cliente: { select: { id: true, nombre: true } },
+        _count: { select: { items: true } },
+      },
       orderBy: { createdAt: 'desc' },
       take: 200,
     });
@@ -134,6 +155,7 @@ router.get(
         total: toNumber(s.total),
         paid: toNumber(s.paid),
         change: toNumber(s.change),
+        saldo: toNumber(s.saldo),
       }))
     );
   })
@@ -145,7 +167,11 @@ router.get(
   asyncHandler(async (req, res) => {
     const sale = await prisma.sale.findUnique({
       where: { id: Number(req.params.id) },
-      include: { items: { include: { product: true } }, user: { select: { name: true } } },
+      include: {
+        items: { include: { product: true } },
+        user: { select: { name: true } },
+        cliente: { select: { id: true, nombre: true } },
+      },
     });
     if (!sale) throw new HttpError(404, 'Venta no encontrada.');
     res.json(serializeSale(sale));
@@ -158,6 +184,7 @@ function serializeSale(s) {
     total: toNumber(s.total),
     paid: toNumber(s.paid),
     change: toNumber(s.change),
+    saldo: toNumber(s.saldo),
     items: s.items.map((it) => ({
       ...it,
       unitPrice: toNumber(it.unitPrice),

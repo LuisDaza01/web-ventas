@@ -36,11 +36,12 @@ router.use(authenticate);
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { search = '', lowStock, page = '1', pageSize = '20' } = req.query;
+    const { search = '', lowStock, page = '1', pageSize = '20', categoryId } = req.query;
     const take = Math.min(Number(pageSize) || 20, 100);
     const skip = (Math.max(Number(page) || 1, 1) - 1) * take;
 
     const where = { active: true };
+    if (categoryId) where.categoryId = Number(categoryId);
     if (search) {
       where.OR = [
         { name: { contains: String(search), mode: 'insensitive' } },

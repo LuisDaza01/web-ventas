@@ -1,6 +1,6 @@
 // Ajustes de la tienda (solo ADMIN): nombre, moneda, impuesto, datos del recibo y logo.
 import { useEffect, useState } from 'react';
-import { Upload, Save } from 'lucide-react';
+import { Upload, Save, Copy, ExternalLink, Check } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -10,6 +10,7 @@ export default function AjustesTienda() {
   const [msg, setMsg] = useState(null); // { type, text }
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [copiado, setCopiado] = useState(false);
 
   useEffect(() => {
     api
@@ -54,6 +55,9 @@ export default function AjustesTienda() {
         mensajeRecibo: form.mensajeRecibo || null,
         logoUrl: form.logoUrl || null,
         qrPagoUrl: form.qrPagoUrl || null,
+        catalogoPublico: Boolean(form.catalogoPublico),
+        whatsapp: form.whatsapp || null,
+        descripcion: form.descripcion || null,
       });
       setForm(data);
       setTienda(data); // aplica moneda/recibo de inmediato en toda la app
@@ -137,6 +141,76 @@ export default function AjustesTienda() {
             </div>
             <p className="text-xs text-gris mt-1.5">El cliente lo escanea para pagar (QR Simple, banco, etc.).</p>
           </div>
+        </div>
+
+        {/* Catálogo público y pedidos por WhatsApp */}
+        <div className="pt-4 border-t border-line space-y-4">
+          <div>
+            <p className="micro mb-1">Catálogo público</p>
+            <p className="text-xs text-gris">
+              Una página con tus productos que puedes compartir por WhatsApp o redes: tus
+              clientes arman el pedido y te llega listo a tu WhatsApp.
+            </p>
+          </div>
+
+          <label className="flex items-center gap-2.5 cursor-pointer text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={Boolean(form.catalogoPublico)}
+              onChange={(e) => setForm((f) => ({ ...f, catalogoPublico: e.target.checked }))}
+            />
+            Activar mi catálogo público
+          </label>
+
+          <div className="grid sm:grid-cols-2 gap-5">
+            <div>
+              <label className="label">WhatsApp para pedidos</label>
+              <input
+                className="input"
+                value={form.whatsapp || ''}
+                onChange={set('whatsapp')}
+                placeholder="59170000000"
+              />
+              <p className="text-xs text-gris mt-1.5">Con código de país (591 para Bolivia), sin espacios.</p>
+            </div>
+            <div>
+              <label className="label">Descripción corta</label>
+              <input
+                className="input"
+                value={form.descripcion || ''}
+                onChange={set('descripcion')}
+                placeholder="Abarrotes y bebidas · Entregas en la zona"
+              />
+            </div>
+          </div>
+
+          {form.catalogoPublico && form.slug && (
+            <div className="card p-3 bg-paper flex items-center gap-2 flex-wrap">
+              <code className="text-xs text-ink flex-1 min-w-0 truncate">
+                {`${window.location.origin}/t/${form.slug}`}
+              </code>
+              <button
+                type="button"
+                className="btn-secondary !py-1 !px-2 !text-[10px]"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/t/${form.slug}`);
+                  setCopiado(true);
+                  setTimeout(() => setCopiado(false), 2000);
+                }}
+              >
+                {copiado ? <Check size={13} strokeWidth={1.5} /> : <Copy size={13} strokeWidth={1.5} />}
+                {copiado ? 'Copiado' : 'Copiar link'}
+              </button>
+              <a
+                href={`/t/${form.slug}`}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary !py-1 !px-2 !text-[10px]"
+              >
+                <ExternalLink size={13} strokeWidth={1.5} /> Ver
+              </a>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end pt-2">

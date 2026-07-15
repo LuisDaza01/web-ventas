@@ -1,6 +1,6 @@
 // Panel de plataforma (SUPERADMIN): administra todas las tiendas del SaaS.
 import { useEffect, useState, useCallback } from 'react';
-import { Power, Plus, Trash2 } from 'lucide-react';
+import { Power, Plus, Trash2, Check, X as XIcon, ExternalLink } from 'lucide-react';
 import { api, errorMsg } from '../api/client.js';
 import { useConfirm } from '../context/ConfirmContext.jsx';
 import Modal from '../components/Modal.jsx';
@@ -27,15 +27,39 @@ export default function PanelPlataforma() {
   const [saving, setSaving] = useState(false);
   const confirm = useConfirm();
 
+  const [solicitudes, setSolicitudes] = useState([]);
+
   const load = useCallback(async () => {
     try {
-      const [t, s] = await Promise.all([api.get('/platform/tiendas'), api.get('/platform/stats')]);
+      const [t, s, sol] = await Promise.all([
+        api.get('/platform/tiendas'),
+        api.get('/platform/stats'),
+        api.get('/platform/solicitudes', { params: { estado: 'PENDIENTE' } }),
+      ]);
       setTiendas(t.data);
       setStats(s.data);
+      setSolicitudes(sol.data);
     } catch (err) {
       setError(errorMsg(err));
     }
   }, []);
+
+  // Aprueba (cambia el plan de la tienda) o rechaza una solicitud.
+  async function resolverSolicitud(s, estado) {
+    setError('');
+    setInfo('');
+    try {
+      await api.patch(`/platform/solicitudes/${s.id}`, { estado });
+      setInfo(
+        estado === 'APROBADA'
+          ? `Plan ${s.plan} activado para "${s.tienda.nombre}".`
+          : `Solicitud de "${s.tienda.nombre}" rechazada.`
+      );
+      load();
+    } catch (err) {
+      setError(errorMsg(err));
+    }
+  }
   useEffect(() => {
     load();
   }, [load]);
@@ -137,6 +161,56 @@ export default function PanelPlataforma() {
           <Stat label="Activas" value={stats.activas} />
           <Stat label="Usuarios" value={stats.usuarios} />
           <Stat label="Productos" value={stats.productos} />
+        </div>
+      )}
+
+      {/* Solicitudes de cambio de plan pendientes */}
+      {solicitudes.length > 0 && (
+        <div>
+          <p className="micro mb-3">
+            Solicitudes de plan pendientes ({solicitudes.length})
+          </p>
+          <div className="space-y-2">
+            {solicitudes.map((s) => (
+              <div key={s.id} className="card p-4 flex items-center gap-4 flex-wrap">
+                <div className="flex-1 min-w-48">
+                  <p className="font-display font-medium text-ink">
+                    {s.tienda.nombre}{' '}
+                    <span className="text-gris font-sans text-xs">/{s.tienda.slug}</span>
+                  </p>
+                  <p className="text-xs text-gris mt-0.5">
+                    {s.tienda.plan} → <b className="text-ink">{s.plan}</b> ·{' '}
+                    {new Date(s.createdAt).toLocaleString('es-BO')}
+                    {s.nota && <> · “{s.nota}”</>}
+                  </p>
+                </div>
+                {s.comprobanteUrl && (
+                  <a
+                    href={s.comprobanteUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-secondary !py-1 !px-2 !text-[10px]"
+                  >
+                    <ExternalLink size={13} strokeWidth={1.5} /> Comprobante
+                  </a>
+                )}
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => resolverSolicitud(s, 'APROBADA')}
+                    className="btn-primary !py-1 !px-2 !text-[10px]"
+                  >
+                    <Check size={13} strokeWidth={1.5} /> Aprobar
+                  </button>
+                  <button
+                    onClick={() => resolverSolicitud(s, 'RECHAZADA')}
+                    className="btn-danger !py-1 !px-2 !text-[10px]"
+                  >
+                    <XIcon size={13} strokeWidth={1.5} /> Rechazar
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

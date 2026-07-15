@@ -42,6 +42,10 @@ const TENANT_MODELS = new Set([
   'Sale',
   'Purchase',
   'StockMovement',
+  'Cliente',
+  'Abono',
+  'CajaSesion',
+  'SolicitudPlan',
 ]);
 
 const base = new PrismaClient({ log: ['warn', 'error'] });

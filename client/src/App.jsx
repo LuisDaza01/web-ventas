@@ -14,6 +14,10 @@ import MiPlan from './pages/MiPlan.jsx';
 import AjustesTienda from './pages/AjustesTienda.jsx';
 import PanelPlataforma from './pages/PanelPlataforma.jsx';
 import UsuariosPlataforma from './pages/UsuariosPlataforma.jsx';
+import Landing from './pages/Landing.jsx';
+import TiendaPublica from './pages/TiendaPublica.jsx';
+import Clientes from './pages/Clientes.jsx';
+import Caja from './pages/Caja.jsx';
 
 // Envuelve rutas privadas; redirige al login o muestra "sin acceso" según el rol.
 function Protected({ children, allow }) {
@@ -30,10 +34,15 @@ export default function App() {
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
 
+      {/* Catálogo público de una tienda: SIN login (escaparate para clientes) */}
+      <Route path="/t/:slug" element={<TiendaPublica />} />
+
       <Route
         path="/"
         element={
-          user?.role === 'SUPERADMIN' ? (
+          !user ? (
+            <Landing />
+          ) : user.role === 'SUPERADMIN' ? (
             <Navigate to="/plataforma" replace />
           ) : (
             <Protected>
@@ -60,6 +69,11 @@ export default function App() {
         path="/compras"
         element={<Protected allow={['ADMIN', 'ALMACEN']}><Purchases /></Protected>}
       />
+      <Route
+        path="/clientes"
+        element={<Protected allow={['ADMIN', 'CAJERO']}><Clientes /></Protected>}
+      />
+      <Route path="/caja" element={<Protected allow={['ADMIN', 'CAJERO']}><Caja /></Protected>} />
       <Route path="/reportes" element={<Protected allow={['ADMIN']}><Reports /></Protected>} />
       <Route path="/usuarios" element={<Protected allow={['ADMIN']}><Users /></Protected>} />
       <Route path="/plan" element={<Protected allow={['ADMIN']}><MiPlan /></Protected>} />

@@ -32,6 +32,10 @@ const updateSchema = z.object({
   mensajeRecibo: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
   qrPagoUrl: z.string().optional().nullable(),
+  // Catálogo público / pedidos por WhatsApp
+  catalogoPublico: z.coerce.boolean().optional(),
+  whatsapp: z.string().optional().nullable(),
+  descripcion: z.string().optional().nullable(),
 });
 
 // PUT /api/tienda -> actualiza la configuración (solo ADMIN)
